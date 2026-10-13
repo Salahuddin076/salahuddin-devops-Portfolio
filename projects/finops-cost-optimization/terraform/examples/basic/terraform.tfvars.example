@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and adjust. Documentation-safe values only.
+owner               = "platform-team"
+monthly_budget_usd  = 6500
+notification_emails = ["finops-alerts@example.com"]

@@ -1,0 +1,5 @@
+# Next-session prompt
+
+Paste this to start the next session:
+
+> Continue the DevOps portfolio. Read `salahuddin-devops-Portfolio/docs/session-handoff.md` first, then `docs/implementation-status.md` and `docs/known-issues.md`. Do not re-audit. Next: (1) implement Project 02 n8n-keda-automation-platform in `projects/n8n-keda-automation-platform/` (Kubernetes manifests with probes, limits, securityContext, NetworkPolicies, PDBs, a KEDA ScaledObject on Redis list length, Helm values, Terraform for the EKS add-ons; validate with kubeconform/helm lint if installed, otherwise a Python manifest-policy test); (2) implement Project 10 aws-serverless-event-driven (stdlib Python Lambda handlers with idempotency and partial batch failures, unit tests, Terraform validate). Run one build agent at a time against this repo and re-run its tests yourself. Then add the light theme and a website CI workflow. Flip `status` in the website's `src/data/projects.ts` only for projects that pass validation. Update the handoff at the end.

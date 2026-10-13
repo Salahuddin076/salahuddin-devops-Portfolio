@@ -1,0 +1,9 @@
+volume_id,volume_type,size_gb,state,attached_instance,region,days_in_state
+vol-0348334896a68f812,gp3,100,in-use,i-030877432d1026706,us-east-1,200
+vol-0d810a485ed03241b,gp3,100,in-use,i-0d7e805da846a32c3,us-east-1,200
+vol-04d419b1b673bd475,gp2,500,in-use,i-0e48478dcb74f2134,us-east-1,300
+vol-05d05ad7853c1f76e,gp2,500,in-use,i-05d2cce8038a39d5e,us-east-1,300
+vol-0b97706ca828bca03,gp3,200,in-use,i-011a11f5125227c37,us-east-1,150
+vol-085813dbad3c681d0,gp2,1000,available,,us-east-1,120
+vol-06bd2aa399dac946d,gp3,200,available,,us-east-1,45
+vol-0c59c0996daeee6f5,gp2,50,available,,us-east-1,10
