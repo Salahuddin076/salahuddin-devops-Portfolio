@@ -1,0 +1,23 @@
+{
+  "description": "SCP attachment map: OU key -> SCPs attached directly to that OU. Single source of truth: terraform/environments/management reads 'attachments' (FullAWSAccess is AWS-managed and attached automatically, so Terraform skips it), and check_scps.py / simulate_scp.py read both keys. AWS allows at most 5 SCPs directly attached per target, and FullAWSAccess counts toward the 5.",
+  "hierarchy": {
+    "root": null,
+    "security": "root",
+    "infrastructure": "root",
+    "workloads": "root",
+    "prod": "workloads",
+    "nonprod": "workloads",
+    "sandbox": "root",
+    "suspended": "root"
+  },
+  "attachments": {
+    "root": ["FullAWSAccess", "deny-leave-organization", "protect-security-services", "region-allowlist"],
+    "security": ["FullAWSAccess", "deny-root-user", "protect-s3-public-access-block"],
+    "infrastructure": ["FullAWSAccess", "deny-root-user", "protect-s3-public-access-block", "require-imdsv2"],
+    "workloads": ["FullAWSAccess", "deny-root-user", "protect-s3-public-access-block", "require-tags-on-create"],
+    "prod": ["FullAWSAccess", "require-imdsv2"],
+    "nonprod": ["FullAWSAccess", "require-imdsv2"],
+    "sandbox": ["FullAWSAccess", "deny-root-user", "protect-s3-public-access-block", "require-imdsv2"],
+    "suspended": ["FullAWSAccess", "deny-all"]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Values for the ${jsonencode(name)} placeholders in *.json.tftpl SCPs. terraform/environments/management passes the same values to templatefile(), so the checked policy is the deployed policy.",
+  "allowed_regions": ["us-east-1", "eu-west-1"],
+  "exempt_principal_arns": [
+    "arn:aws:iam::*:role/LandingZoneBreakGlass",
+    "arn:aws:iam::*:role/LandingZoneSecurityAutomation"
+  ]
+}

@@ -1,0 +1,15 @@
+# Synthetic values only. Copy to terraform.tfvars (git-ignored) and replace.
+
+region           = "us-east-1"
+network_role_arn = "arn:aws:iam::333333333333:role/OrganizationAccountAccessRole"
+organization_arn = "arn:aws:organizations::111111111111:organization/o-exampleorg1"
+azs              = ["us-east-1a", "us-east-1b"]
+
+# Phase 2: record attachments as spokes come online (workload-baseline
+# output transit_gateway_attachment_id).
+spoke_attachment_ids = {
+  prod-payments    = "tgw-attach-0123456789abcdef0"
+  nonprod-payments = "tgw-attach-0fedcba9876543210"
+}
+
+single_nat_gateway = false

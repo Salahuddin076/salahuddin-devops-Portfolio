@@ -1,0 +1,82 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyOutsideAllowedRegions",
+      "Effect": "Deny",
+      "NotAction": [
+        "a4b:*",
+        "access-analyzer:*",
+        "account:*",
+        "acm:*",
+        "aws-marketplace-management:*",
+        "aws-marketplace:*",
+        "aws-portal:*",
+        "billing:*",
+        "budgets:*",
+        "ce:*",
+        "chime:*",
+        "cloudfront:*",
+        "config:*",
+        "cur:*",
+        "directconnect:*",
+        "ec2:DescribeRegions",
+        "ec2:DescribeTransitGateways",
+        "ec2:DescribeVpnGateways",
+        "fms:*",
+        "globalaccelerator:*",
+        "health:*",
+        "iam:*",
+        "importexport:*",
+        "invoicing:*",
+        "kms:*",
+        "networkmanager:*",
+        "organizations:*",
+        "payments:*",
+        "pricing:*",
+        "route53:*",
+        "route53domains:*",
+        "route53-recovery-cluster:*",
+        "route53-recovery-control-config:*",
+        "route53-recovery-readiness:*",
+        "s3:CreateMultiRegionAccessPoint",
+        "s3:DeleteMultiRegionAccessPoint",
+        "s3:DescribeMultiRegionAccessPointOperation",
+        "s3:GetAccountPublicAccessBlock",
+        "s3:GetMultiRegionAccessPoint",
+        "s3:GetMultiRegionAccessPointPolicy",
+        "s3:GetMultiRegionAccessPointPolicyStatus",
+        "s3:GetStorageLensConfiguration",
+        "s3:GetStorageLensDashboard",
+        "s3:ListAllMyBuckets",
+        "s3:ListMultiRegionAccessPoints",
+        "s3:ListStorageLensConfigurations",
+        "s3:PutAccountPublicAccessBlock",
+        "s3:PutMultiRegionAccessPointPolicy",
+        "savingsplans:*",
+        "shield:*",
+        "sso:*",
+        "sts:*",
+        "support:*",
+        "supportapp:*",
+        "supportplans:*",
+        "sustainability:*",
+        "tax:*",
+        "trustedadvisor:*",
+        "waf-regional:*",
+        "waf:*",
+        "wafv2:*",
+        "wellarchitected:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": ${jsonencode(allowed_regions)}
+        },
+        "ArnNotLike": {
+          "aws:PrincipalArn": ${jsonencode(exempt_principal_arns)}
+        }
+      }
+    }
+  ]
+}

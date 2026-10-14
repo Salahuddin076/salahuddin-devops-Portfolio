@@ -1,0 +1,88 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProtectCloudTrail",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:DeleteTrail",
+        "cloudtrail:StopLogging",
+        "cloudtrail:UpdateTrail",
+        "cloudtrail:PutEventSelectors"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/LandingZoneBreakGlass",
+            "arn:aws:iam::*:role/LandingZoneSecurityAutomation"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ProtectGuardDuty",
+      "Effect": "Deny",
+      "Action": [
+        "guardduty:DeleteDetector",
+        "guardduty:UpdateDetector",
+        "guardduty:DisassociateFromAdministratorAccount",
+        "guardduty:DisassociateFromMasterAccount",
+        "guardduty:DisassociateMembers",
+        "guardduty:DeleteMembers",
+        "guardduty:StopMonitoringMembers"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/LandingZoneBreakGlass",
+            "arn:aws:iam::*:role/LandingZoneSecurityAutomation"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ProtectConfig",
+      "Effect": "Deny",
+      "Action": [
+        "config:DeleteConfigurationRecorder",
+        "config:StopConfigurationRecorder",
+        "config:PutConfigurationRecorder",
+        "config:DeleteDeliveryChannel",
+        "config:DeleteRetentionConfiguration",
+        "config:DeleteConfigurationAggregator"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/LandingZoneBreakGlass",
+            "arn:aws:iam::*:role/LandingZoneSecurityAutomation"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ProtectSecurityHub",
+      "Effect": "Deny",
+      "Action": [
+        "securityhub:DisableSecurityHub",
+        "securityhub:BatchDisableStandards",
+        "securityhub:DisassociateFromAdministratorAccount",
+        "securityhub:DisassociateFromMasterAccount",
+        "securityhub:DisassociateMembers",
+        "securityhub:DeleteMembers"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::*:role/LandingZoneBreakGlass",
+            "arn:aws:iam::*:role/LandingZoneSecurityAutomation"
+          ]
+        }
+      }
+    }
+  ]
+}

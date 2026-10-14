@@ -1,0 +1,51 @@
+# Synthetic values only. Copy to terraform.tfvars (git-ignored) and replace.
+
+region               = "us-east-1"
+management_role_arn  = "arn:aws:iam::111111111111:role/LandingZoneDeployer"
+log_archive_role_arn = "arn:aws:iam::222222222222:role/OrganizationAccountAccessRole"
+
+accounts = {
+  log-archive      = { name = "log-archive", email = "aws+log-archive@example.com", ou = "security" }
+  security-tooling = { name = "security-tooling", email = "aws+security@example.com", ou = "security" }
+  shared-services  = { name = "shared-services", email = "aws+shared-services@example.com", ou = "infrastructure" }
+  workload-prod    = { name = "workload-prod", email = "aws+workload-prod@example.com", ou = "prod" }
+  workload-nonprod = { name = "workload-nonprod", email = "aws+workload-nonprod@example.com", ou = "nonprod" }
+  sandbox-alpha    = { name = "sandbox-alpha", email = "aws+sandbox-alpha@example.com", ou = "sandbox" }
+}
+
+delegated_administrators = {
+  "config.amazonaws.com"          = "log-archive"
+  "access-analyzer.amazonaws.com" = "security-tooling"
+}
+security_tooling_account_key = "security-tooling"
+
+identity_center_group_ids = {
+  platform-admins = "11111111-2222-3333-4444-555555555555"
+  developers      = "22222222-3333-4444-5555-666666666666"
+  auditors        = "33333333-4444-5555-6666-777777777777"
+  finance         = "44444444-5555-6666-7777-888888888888"
+}
+
+identity_center_assignments = {
+  platform-admins = {
+    shared-services  = ["AdministratorAccess", "ReadOnlyAccess"]
+    workload-prod    = ["AdministratorAccess", "ReadOnlyAccess"]
+    workload-nonprod = ["AdministratorAccess"]
+  }
+  developers = {
+    workload-nonprod = ["PowerUserAccess"]
+    workload-prod    = ["ReadOnlyAccess"]
+    sandbox-alpha    = ["PowerUserAccess"]
+  }
+  auditors = {
+    log-archive      = ["ReadOnlyAccess"]
+    security-tooling = ["ReadOnlyAccess"]
+    workload-prod    = ["ReadOnlyAccess"]
+  }
+  finance = {
+    management = ["BillingAccess"]
+  }
+}
+
+log_bucket_name            = "example-lz-org-logs"
+object_lock_retention_days = 365

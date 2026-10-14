@@ -1,0 +1,16 @@
+{
+  "description": "IPAM-like address plan. Spokes are /16s carved from 10.0.0.0/8; 'reserved' blocks are never handed to a spoke. terraform/environments/shared-services and workload-baseline read this file, and cidr_plan.py checks it.",
+  "allowed_ranges": ["10.0.0.0/8"],
+  "spoke_prefix_length": 16,
+  "reserved": {
+    "egress": "10.0.0.0/16",
+    "future-onprem": "10.255.0.0/16"
+  },
+  "spokes": {
+    "shared-services": { "cidr": "10.1.0.0/16", "environment": "shared", "account": "shared-services" },
+    "prod-payments": { "cidr": "10.16.0.0/16", "environment": "prod", "account": "workload-prod" },
+    "prod-data": { "cidr": "10.17.0.0/16", "environment": "prod", "account": "workload-prod" },
+    "nonprod-payments": { "cidr": "10.32.0.0/16", "environment": "nonprod", "account": "workload-nonprod" },
+    "nonprod-data": { "cidr": "10.33.0.0/16", "environment": "nonprod", "account": "workload-nonprod" }
+  }
+}

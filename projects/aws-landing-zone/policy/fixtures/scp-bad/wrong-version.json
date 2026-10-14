@@ -1,0 +1,6 @@
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    { "Sid": "OldGrammar", "Effect": "Deny", "Action": "organizations:LeaveOrganization", "Resource": "*" }
+  ]
+}

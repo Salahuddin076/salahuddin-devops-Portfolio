@@ -1,0 +1,118 @@
+name: aws-landing-zone
+
+on:
+  push:
+    paths:
+      - "projects/aws-landing-zone/**"
+      - ".github/workflows/aws-landing-zone.yml"
+  pull_request:
+    paths:
+      - "projects/aws-landing-zone/**"
+      - ".github/workflows/aws-landing-zone.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-landing-zone-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/aws-landing-zone
+
+jobs:
+  python-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+
+  policy-checks:
+    name: SCP and CIDR plan checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check_scps.py on the shipped SCPs and attachment map
+        run: python policy/check_scps.py
+      - name: check_scps.py must fail the bad fixtures
+        run: |
+          set +e
+          python policy/check_scps.py --scp-dir policy/fixtures/scp-bad \
+            --attachments policy/fixtures/scp-bad/attachments.json
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 on the bad SCP fixtures, got $code"
+            exit 1
+          fi
+      - name: cidr_plan.py on the address plan
+        run: python policy/cidr_plan.py
+      - name: cidr_plan.py must fail the bad plan
+        run: |
+          set +e
+          python policy/cidr_plan.py policy/fixtures/cidr-plan-bad.json
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 on the bad CIDR plan, got $code"
+            exit 1
+          fi
+      - name: Simulator smoke (region deny and global-service exemption)
+        run: |
+          set +e
+          python policy/simulate_scp.py --ou prod --action ec2:RunInstances --region ap-southeast-1
+          [ $? -eq 1 ] || { echo "::error::expected ec2:RunInstances in ap-southeast-1 to be denied"; exit 1; }
+          python policy/simulate_scp.py --ou prod --action iam:CreateRole --region ap-southeast-1
+          [ $? -eq 0 ] || { echo "::error::expected iam:CreateRole to pass the region deny"; exit 1; }
+
+  terraform-fmt:
+    name: Terraform fmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+
+  terraform-validate:
+    name: Terraform validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dir:
+          - modules/organization
+          - modules/guardrails
+          - modules/identity-center
+          - modules/account-baseline
+          - modules/network-hub
+          - modules/spoke-vpc
+          # log-archive declares configuration_aliases, so it is validated
+          # through a minimal caller (and through environments/management).
+          - modules/log-archive/validation-harness
+          - environments/management
+          - environments/shared-services
+          - environments/workload-baseline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: init and validate
+        run: |
+          terraform -chdir="terraform/${{ matrix.dir }}" init -backend=false -input=false
+          terraform -chdir="terraform/${{ matrix.dir }}" validate

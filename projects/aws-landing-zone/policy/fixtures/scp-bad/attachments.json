@@ -1,0 +1,8 @@
+{
+  "description": "Deliberately over the limit: six SCPs directly attached to 'workloads' (FullAWSAccess counts).",
+  "hierarchy": { "root": null, "workloads": "root" },
+  "attachments": {
+    "root": ["FullAWSAccess", "missing-sid"],
+    "workloads": ["FullAWSAccess", "wrong-version", "missing-sid", "allow-star", "region-deny-missing-globals", "oversized"]
+  }
+}

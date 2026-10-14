@@ -1,0 +1,18 @@
+# Synthetic values only. Copy to terraform.tfvars (git-ignored) and replace.
+# One state per workload account (a workspace or a backend key per account).
+
+region             = "us-east-1"
+workload_role_arn  = "arn:aws:iam::444444444444:role/OrganizationAccountAccessRole"
+environment        = "prod"
+owner              = "payments-team"
+cost_center        = "CC-1001"
+monthly_budget_usd = 2500
+
+budget_alert_emails = [
+  "payments-team@example.com",
+  "finops@example.com",
+]
+
+spoke_name         = "prod-payments"
+transit_gateway_id = "tgw-0123456789abcdef0"
+azs                = ["us-east-1a", "us-east-1b"]

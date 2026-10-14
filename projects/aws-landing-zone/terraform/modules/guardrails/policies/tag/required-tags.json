@@ -1,0 +1,67 @@
+{
+  "tags": {
+    "CostCenter": {
+      "tag_key": {
+        "@@assign": "CostCenter"
+      },
+      "tag_value": {
+        "@@assign": [
+          "CC-1001",
+          "CC-1002",
+          "CC-2001",
+          "CC-9000"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "ec2:instance",
+          "ec2:volume",
+          "rds:db",
+          "s3:bucket"
+        ]
+      }
+    },
+    "Owner": {
+      "tag_key": {
+        "@@assign": "Owner"
+      },
+      "tag_value": {
+        "@@assign": [
+          "platform-team",
+          "payments-team",
+          "data-team",
+          "security-team"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "ec2:instance",
+          "ec2:volume",
+          "rds:db",
+          "s3:bucket"
+        ]
+      }
+    },
+    "Environment": {
+      "tag_key": {
+        "@@assign": "Environment"
+      },
+      "tag_value": {
+        "@@assign": [
+          "prod",
+          "nonprod",
+          "shared",
+          "sandbox"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "ec2:instance",
+          "ec2:volume",
+          "rds:db",
+          "s3:bucket"
+        ]
+      }
+    }
+  }
+}
