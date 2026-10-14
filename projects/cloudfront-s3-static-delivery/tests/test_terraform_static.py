@@ -171,7 +171,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertRegex(deploy, r"\n    if: false")
         self.assertIn("id-token: write", deploy)
         self.assertEqual(WORKFLOW_TEXT.count("id-token: write"), 1)
-        self.assertIn("aws-actions/configure-aws-credentials@v4", deploy)
+        # Pinned to a full commit SHA (v4.x), never a mutable tag.
+        self.assertRegex(deploy, r"aws-actions/configure-aws-credentials@[0-9a-f]{40} # v4\.")
         self.assertIn("role-to-assume: ${{ vars.", deploy)
         self.assertNotIn("secrets.AWS", WORKFLOW_TEXT)
 
