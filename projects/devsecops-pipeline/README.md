@@ -92,20 +92,18 @@ $ python3 policy/trivyignore_check.py .trivyignore
 1 entry checked against 2026-10-14: 0 problem(s)
 
 $ python3 policy/check_workflows.py --uri-base ../.. ../../.github/workflows      # whole repo, read-only
-.github/workflows/cloudfront-s3-static-delivery.yml:31: ERROR WF050 checkout-persists-credentials: job `unittest` checks out without `persist-credentials: false`
-...
 per file (errors/warnings):
-  FAIL .github/workflows/aws-backup-cross-region-dr.yml  5/7
-  FAIL .github/workflows/aws-codepipeline-container-delivery.yml  4/4
-  FAIL .github/workflows/aws-landing-zone.yml  6/6
-  FAIL .github/workflows/aws-serverless-event-driven.yml  4/5
-  FAIL .github/workflows/cloud-security-waf-automation.yml  5/8
-  FAIL .github/workflows/cloudfront-s3-static-delivery.yml  5/6
+  ok   .github/workflows/aws-backup-cross-region-dr.yml  0/0
+  ok   .github/workflows/aws-codepipeline-container-delivery.yml  0/0
+  ok   .github/workflows/aws-landing-zone.yml  0/0
+  ok   .github/workflows/aws-serverless-event-driven.yml  0/0
+  ok   .github/workflows/cloud-security-waf-automation.yml  0/0
+  ok   .github/workflows/cloudfront-s3-static-delivery.yml  0/0
   ok   .github/workflows/devsecops-pipeline.yml  0/0
   ok   .github/workflows/devsecops-reusable.yml  0/0
-  FAIL .github/workflows/ecs-fargate-blue-green.yml  6/4
-  FAIL .github/workflows/finops-cost-optimization.yml  4/6
-10 file(s) checked: 39 error(s), 46 warning(s)
+  ok   .github/workflows/ecs-fargate-blue-green.yml  0/0
+  ok   .github/workflows/finops-cost-optimization.yml  0/0
+10 file(s) checked: 0 error(s), 0 warning(s)
 ```
 
 SARIF output: `--format sarif --output lint.sarif`. Exit status is 1 on any
@@ -183,18 +181,19 @@ still current, and let Dependabot own the bumps after that.
 - gitleaks scans commits. Run `gitleaks dir` as well for uncommitted files. That
   was done locally: `no leaks found`.
 
-## Follow-ups (findings in other projects' workflows, not changed here)
+## Whole-repo findings (fixed)
 
-The whole-repo lint reports **39 errors and 46 warnings in the 8 other
-projects' workflow files**. Per the brief, those files were left untouched:
+The first whole-repo run of the linter reported **39 errors and 46 warnings
+in the other 8 projects' workflow files**. They were fixed in a follow-up
+commit, and the run above is the result after the fix:
 
-| Rule | Count | Where | Fix |
+| Rule | Count | Where | Fix applied |
 |---|---|---|---|
-| WF050 checkout without `persist-credentials: false` | 27 errors | every job with a checkout in all 8 files | add `with: persist-credentials: false` |
-| WF010 third-party action on a tag | 12 errors | `hashicorp/setup-terraform@v3` ×9 (all 8 files; aws-landing-zone twice), `docker/setup-qemu-action@v3` and `docker/setup-buildx-action@v3` (ecs-fargate-blue-green), `aws-actions/configure-aws-credentials@v4` (cloudfront-s3-static-delivery) | pin to SHA + `# vX.Y.Z` |
-| WF011 first-party action on a tag | 46 warnings | `actions/checkout@v4`, `actions/setup-python@v5`, `actions/setup-node@v4`, `actions/upload-artifact@v4`, `github/codeql-action/upload-sarif@v3` | pin to SHA (lower risk) |
+| WF050 checkout without `persist-credentials: false` | 27 errors | every job with a checkout in all 8 files | added `with: persist-credentials: false` (none of these jobs pushes) |
+| WF010 third-party action on a tag | 12 errors | `hashicorp/setup-terraform@v3` ×9, `docker/setup-qemu-action@v3`, `docker/setup-buildx-action@v3`, `aws-actions/configure-aws-credentials@v4` | pinned to commit SHAs resolved with `git ls-remote`, keeping the same major version, with a `# vX.Y.Z` comment |
+| WF011 first-party action on a tag | 46 warnings | `actions/checkout@v4`, `actions/setup-python@v5`, `actions/setup-node@v4`, `actions/upload-artifact@v4`, `github/codeql-action/upload-sarif@v3` | pinned the same way |
 
-No other project has WF001, WF002, WF020, WF030 or WF040 findings. All 8
+There were no WF001, WF002, WF020, WF030 or WF040 findings. All 8
 declare top-level `permissions: contents: read`, and the one `id-token: write`
 (cloudfront-s3-static-delivery) is correctly job-scoped. Also recommended for
 the repository as a whole: a `.github/dependabot.yml` for the `github-actions`
