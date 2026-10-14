@@ -1,5 +1,24 @@
 # Session handoff
 
+## Session 2 — 2026-10-14 (resumed after two session restarts)
+
+### Completed
+- **Project 14 fully verified:** `terraform validate` passes for the module and the example (aws 6.68.0). The site status is flipped to `implemented`.
+- **Bug fix (`1e33d18`):** the Services section still referenced a deleted diagram, leaving a broken image on the home page. Session 1's crawler only checked `href`s; the new smoke test also checks `src`.
+- **Light theme (`dda3762`):** tokenized colors, OS-preference default, persisted toggle, no flash on load.
+- **Security headers + CI (`fc83464`):**
+  - CSP, nosniff, Referrer-Policy, X-Frame-Options and Permissions-Policy in `next.config.ts`.
+  - `.github/workflows/ci.yml` runs lint → build → typecheck → `scripts/smoke.mjs`.
+  - The smoke script fails on broken links/assets, missing headers or a wrong 404, and was negative-tested against the live site.
+
+### Website branch state
+`portfolio/phase-1-projects`: `97123d5` → `1e33d18` → `dda3762` → `fc83464`. **Not pushed.** Pushing to `main` deploys to production on Vercel.
+
+### Notes for next session
+- Background jobs die when the session restarts. Run long commands (terraform init, brew) in the foreground with `timeout: 600000`, or expect to re-run them.
+- The scratchpad is wiped on restart, so the CDP QA scripts are gone. Use gstack `/browse` (now installed) instead.
+- helm/kubeconform are still missing (the brew install timed out). Install them before Project 02.
+
 ## Session 1 — 2026-10-14
 
 ### Completed
