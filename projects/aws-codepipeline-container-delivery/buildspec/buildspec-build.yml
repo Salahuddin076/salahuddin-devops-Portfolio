@@ -1,0 +1,68 @@
+# CodeBuild: build stage. Builds the image, tags it with the commit SHA,
+# scans it with Trivy (CRITICAL fails the build), pushes it to ECR and writes
+# imagedefinitions.json for the ECS deploy actions.
+#
+# Every step is in one phase with on-failure: ABORT. post_build runs even
+# when build fails, so nothing that pushes an image lives there.
+#
+# Environment (set by Terraform on the CodeBuild project):
+#   PROJECT_DIR         path of this project inside the repository
+#   ECR_REPOSITORY_URI  <account>.dkr.ecr.<region>.amazonaws.com/<repo>
+#   CONTAINER_NAME      container name in the ECS task definitions
+# The project runs in privileged mode (required for docker build).
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    TRIVY_VERSION: "0.58.1"
+    REPORT_DIR: "reports/trivy"
+  secrets-manager:
+    # Docker Hub credentials, used only to avoid anonymous pull rate limits on
+    # the base image. Format is secret-id:json-key; without :json-key the
+    # variable would hold the whole JSON document (docs/troubleshooting.md).
+    DOCKERHUB_USERNAME: "container-delivery/ci/dockerhub:username"
+    DOCKERHUB_PASSWORD: "container-delivery/ci/dockerhub:password"
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      python: 3.12
+    commands:
+      - cd /tmp
+      - curl -sSfL -o trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+      - curl -sSfL -o trivy_checksums.txt "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
+      - grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" trivy_checksums.txt | sha256sum -c -
+      - mkdir -p /opt/trivy && tar -xzf trivy.tar.gz -C /opt/trivy
+      - /opt/trivy/trivy --version
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/$PROJECT_DIR"
+      - IMAGE_TAG="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo "$IMAGE_TAG" | grep -Eq '^[0-9a-f]{40}$' || { echo "CODEBUILD_RESOLVED_SOURCE_VERSION is not a commit SHA" >&2; exit 1; }
+      - APP_VERSION="$(cat app/VERSION)"
+      - IMAGE_URI="$ECR_REPOSITORY_URI:$IMAGE_TAG"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${ECR_REPOSITORY_URI%%/*}"
+      - printf '%s' "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+  build:
+    on-failure: ABORT
+    commands:
+      - docker build --pull --build-arg APP_VERSION="$APP_VERSION" --build-arg GIT_SHA="$IMAGE_TAG" -t "$ECR_REPOSITORY_URI:$IMAGE_TAG" app
+      - mkdir -p "$CODEBUILD_SRC_DIR/$REPORT_DIR"
+      - /opt/trivy/trivy image --no-progress --exit-code 0 --severity HIGH,CRITICAL --format template --template "@/opt/trivy/contrib/junit.tpl" --output "$CODEBUILD_SRC_DIR/$REPORT_DIR/trivy.xml" "$IMAGE_URI"
+      - /opt/trivy/trivy image --no-progress --exit-code 1 --severity CRITICAL "$IMAGE_URI"
+      - docker push "$IMAGE_URI"
+      - python3 scripts/make_imagedefinitions.py --require-commit-sha --container "$CONTAINER_NAME" --image "$IMAGE_URI" --output "$CODEBUILD_SRC_DIR/imagedefinitions.json"
+
+artifacts:
+  files:
+    - imagedefinitions.json
+
+reports:
+  image-scan:
+    files:
+      - "trivy.xml"
+    base-directory: "reports/trivy"
+    file-format: JUNITXML

@@ -1,0 +1,100 @@
+name: aws-codepipeline-container-delivery
+
+on:
+  push:
+    paths:
+      - "projects/aws-codepipeline-container-delivery/**"
+      - ".github/workflows/aws-codepipeline-container-delivery.yml"
+  pull_request:
+    paths:
+      - "projects/aws-codepipeline-container-delivery/**"
+      - ".github/workflows/aws-codepipeline-container-delivery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-codepipeline-container-delivery-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/aws-codepipeline-container-delivery
+
+jobs:
+  python-tests:
+    name: Python unit tests + buildspec lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+      - name: Buildspec policy lint (real buildspecs must pass)
+        run: python scripts/check_buildspec.py buildspec/buildspec-test.yml buildspec/buildspec-build.yml
+      - name: Buildspec policy lint (every bad fixture must fail)
+        run: |
+          for f in tests/fixtures/bad-*.yml; do
+            if python scripts/check_buildspec.py "$f"; then
+              echo "::error file=$f::expected the lint to fail on $f"
+              exit 1
+            fi
+          done
+
+  terraform:
+    name: Terraform fmt + validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: validate module
+        run: |
+          terraform -chdir=terraform/modules/container-delivery init -backend=false -input=false
+          terraform -chdir=terraform/modules/container-delivery validate
+      - name: validate example
+        run: |
+          terraform -chdir=terraform/examples/basic init -backend=false -input=false
+          terraform -chdir=terraform/examples/basic validate
+
+  docker-build:
+    name: Docker build + smoke test (no push)
+    runs-on: ubuntu-latest
+    needs: python-tests
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build app image
+        run: |
+          docker build \
+            --build-arg APP_VERSION="$(cat app/VERSION)" \
+            --build-arg GIT_SHA="${GITHUB_SHA}" \
+            -t "container-delivery-demo:${GITHUB_SHA}" app
+      - name: Run it read-only and probe it
+        run: |
+          docker run -d --name app --read-only -p 8080:8080 \
+            -e REQUIRE_DB_PASSWORD=true -e DB_PASSWORD=ci-sentinel-not-a-secret \
+            "container-delivery-demo:${GITHUB_SHA}"
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' app)"
+            [ "$status" = "healthy" ] && break
+            sleep 1
+          done
+          docker inspect -f '{{.State.Health.Status}}' app | grep -qx healthy
+          curl -fsS localhost:8080/version | grep -q "${GITHUB_SHA}"
+          test "$(docker exec app id -u)" = "10001"
+          if docker logs app 2>&1 | grep -q ci-sentinel-not-a-secret; then
+            echo "::error::secret value found in container logs"
+            exit 1
+          fi
+      - name: Container logs
+        if: always()
+        run: docker logs app || true

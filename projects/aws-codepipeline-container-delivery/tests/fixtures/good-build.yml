@@ -1,0 +1,20 @@
+# Minimal compliant image buildspec (fixture).
+version: 0.2
+env:
+  variables:
+    IMAGE_REPO: "registry.example.com/demo"
+  secrets-manager:
+    REGISTRY_PASSWORD: "ci/registry:password"
+    API_TOKEN: "arn:aws:secretsmanager:us-east-1:111122223333:secret:ci/api-AbCdEf:token"
+phases:
+  build:
+    commands:
+      - TAG="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - docker build -t "$IMAGE_REPO:$TAG" .
+      - trivy image --exit-code 1 --severity HIGH,CRITICAL "$IMAGE_REPO:$TAG"
+      - docker push "$IMAGE_REPO:$TAG"
+reports:
+  scan:
+    files:
+      - "trivy.xml"
+    file-format: JUNITXML

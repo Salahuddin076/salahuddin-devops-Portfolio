@@ -1,0 +1,10 @@
+# Build context is app/: send only what the image needs.
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+.git
+.env
+*.env
+*.log
+Dockerfile
+.dockerignore

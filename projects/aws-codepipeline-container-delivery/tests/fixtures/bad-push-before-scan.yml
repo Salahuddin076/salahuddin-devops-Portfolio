@@ -1,0 +1,16 @@
+# BS007: the image reaches ECR before the scan gate runs.
+version: 0.2
+phases:
+  build:
+    commands:
+      - IMAGE_TAG="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - docker build -t "$ECR_REPOSITORY_URI:$IMAGE_TAG" app
+      - docker push "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+  post_build:
+    commands:
+      - trivy image --exit-code 1 --severity CRITICAL "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+reports:
+  scan:
+    files:
+      - "trivy.xml"
+    file-format: JUNITXML

@@ -1,0 +1,34 @@
+# CodeBuild: test stage. Runs the stdlib unittest suite and the buildspec
+# policy lint, and publishes JUnit results to a CodeBuild report group.
+#
+# Environment (set by Terraform on the CodeBuild project):
+#   PROJECT_DIR   path of this project inside the repository ("." for a standalone repo)
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    PYTHONDONTWRITEBYTECODE: "1"
+    REPORT_DIR: "reports/junit"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/$PROJECT_DIR"
+      - python3 --version
+      - python3 scripts/check_buildspec.py buildspec/buildspec-test.yml buildspec/buildspec-build.yml
+  build:
+    on-failure: ABORT
+    commands:
+      - python3 scripts/junit_runner.py --start-dir tests --output "$CODEBUILD_SRC_DIR/$REPORT_DIR/unit.xml"
+
+reports:
+  unit-tests:
+    files:
+      - "unit.xml"
+    base-directory: "reports/junit"
+    file-format: JUNITXML

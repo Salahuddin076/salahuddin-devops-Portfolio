@@ -1,0 +1,6 @@
+# BS001 + BS004: wrong version and no report groups.
+version: 0.1
+phases:
+  build:
+    commands:
+      - python3 -m unittest discover -s tests

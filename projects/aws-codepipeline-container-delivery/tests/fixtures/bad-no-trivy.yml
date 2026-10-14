@@ -1,0 +1,14 @@
+# BS006: no scan at all (and a report-only scan does not count as a gate).
+version: 0.2
+phases:
+  build:
+    commands:
+      - IMAGE_TAG="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - docker build -t "$ECR_REPOSITORY_URI:$IMAGE_TAG" app
+      - trivy image --exit-code 0 --severity CRITICAL "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+      - docker push "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+reports:
+  scan:
+    files:
+      - "trivy.xml"
+    file-format: JUNITXML

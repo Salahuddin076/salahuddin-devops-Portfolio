@@ -1,0 +1,7 @@
+# BS000: a block scalar is outside the supported subset.
+version: 0.2
+phases:
+  build:
+    commands:
+      - |
+        echo multi-line

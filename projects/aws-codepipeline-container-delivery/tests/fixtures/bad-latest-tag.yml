@@ -1,0 +1,13 @@
+# BS005: mutable latest tag, not the commit SHA.
+version: 0.2
+phases:
+  build:
+    commands:
+      - docker build -t "$ECR_REPOSITORY_URI:latest" app
+      - trivy image --exit-code 1 --severity CRITICAL "$ECR_REPOSITORY_URI:latest"
+      - docker push "$ECR_REPOSITORY_URI:latest"
+reports:
+  scan:
+    files:
+      - "trivy.xml"
+    file-format: JUNITXML

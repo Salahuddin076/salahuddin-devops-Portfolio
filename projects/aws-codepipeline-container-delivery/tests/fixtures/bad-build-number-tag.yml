@@ -1,0 +1,14 @@
+# BS005: tag derived from the build number, not the source commit.
+version: 0.2
+phases:
+  build:
+    commands:
+      - IMAGE_TAG="build-$CODEBUILD_BUILD_NUMBER"
+      - docker build -t "$ECR_REPOSITORY_URI:$IMAGE_TAG" app
+      - trivy image --exit-code 1 --severity CRITICAL "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+      - docker push "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+reports:
+  scan:
+    files:
+      - "trivy.xml"
+    file-format: JUNITXML

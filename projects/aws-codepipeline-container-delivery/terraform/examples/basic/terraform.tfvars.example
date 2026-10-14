@@ -1,0 +1,8 @@
+# Obviously fake IDs: replace with an existing VPC and private subnets.
+region             = "us-east-1"
+owner              = "platform-team"
+repository_full_id = "example-org/container-delivery-demo"
+vpc_id             = "vpc-0123456789abcdef0"
+subnet_ids         = ["subnet-0123456789abcdef0", "subnet-0fedcba9876543210"]
+approval_emails    = ["release-approvers@example.com"]
+first_apply        = true
