@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dr-app.fullname" . }}-config
+  labels:
+    {{- include "dr-app.labels" . | nindent 4 }}
+data:
+  AWS_REGION: {{ .Values.region | quote }}
+  REGION_ROLE: {{ .Values.regionRole | quote }}
+  DB_HOST: {{ required "config.dbHost is required" .Values.config.dbHost | quote }}
+  DB_READER_HOST: {{ .Values.config.dbReaderHost | quote }}
+  DB_SECRET_ID: {{ required "config.dbSecretId is required" .Values.config.dbSecretId | quote }}
+  CACHE_HOST: {{ required "config.cacheHost is required" .Values.config.cacheHost | quote }}
+  CACHE_TLS: "true"
+  BUCKET_NAME: {{ .Values.config.bucketName | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}

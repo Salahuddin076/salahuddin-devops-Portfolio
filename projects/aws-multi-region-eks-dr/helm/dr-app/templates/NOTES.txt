@@ -1,0 +1,13 @@
+{{ include "dr-app.fullname" . }} in {{ .Values.region }} ({{ .Values.regionRole }} at deploy time).
+
+Workers: {{ if .Values.workers.enabled }}enabled, {{ .Values.workers.replicas }} replica(s){{ else }}disabled (0 replicas): this region is the standby or fenced{{ end }}.
+API minimum replicas: {{ if .Values.api.autoscaling.enabled }}{{ .Values.api.autoscaling.minReplicas }} (HPA){{ else }}{{ .Values.api.replicas }}{{ end }}.
+
+The AWS Load Balancer Controller creates the ALB from the Ingress. Read its
+DNS name for the Route 53 phase of the bootstrap:
+
+  kubectl -n {{ .Release.Namespace }} get ingress {{ include "dr-app.fullname" . }}-api \
+    -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+
+Do not change workers.* by hand during an incident; use `python3 -m failover`
+so the change is recorded in the audit log and the state file.

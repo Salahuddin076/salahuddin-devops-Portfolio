@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "dr-app.fullname" . }}-api
+  labels:
+    {{- include "dr-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  minAvailable: {{ .Values.api.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "dr-app.selectorLabels" (dict "root" . "component" "api") | nindent 6 }}

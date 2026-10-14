@@ -1,0 +1,39 @@
+# Primary region (us-east-1): full size, workers on.
+region: us-east-1
+regionRole: primary
+
+image:
+  repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/dr-app/order-api
+
+config:
+  dbHost: dr-app-us-east-1.cluster-cexample0001.us-east-1.rds.amazonaws.com
+  dbReaderHost: dr-app-us-east-1.cluster-ro-cexample0001.us-east-1.rds.amazonaws.com
+  cacheHost: master.dr-app-us-east-1-valkey.example.use1.cache.amazonaws.com
+  bucketName: example-dr-app-data-us-east-1
+
+api:
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 12
+  pdb:
+    minAvailable: 2
+
+workers:
+  enabled: true
+  replicas: 2
+
+topologySpread:
+  whenUnsatisfiable: DoNotSchedule
+
+ingress:
+  regionalHost: us-east-1.orders.example.com
+  certificateArn: arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-4000-8000-000000000001
+  loadBalancerName: dr-app-us-east-1
+
+networkPolicy:
+  albSourceCidrs:
+    - 10.10.0.0/16
+  dataSubnetCidrs:
+    - 10.10.192.0/22
+    - 10.10.196.0/22
+    - 10.10.200.0/22

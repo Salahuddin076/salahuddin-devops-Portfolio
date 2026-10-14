@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+plan.json
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Failover CLI state, audit log and fake worlds from local rehearsals
+.failover/
+*.world.json
+world.json
+drill.json
+outage.json
+
+# Real failover config (account IDs, ARNs, kube contexts)
+config/failover.json
+
+# Helm
+helm/dr-app/charts/
+*.tgz
+
+# Python
+__pycache__/
+*.pyc

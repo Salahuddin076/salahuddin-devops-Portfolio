@@ -1,0 +1,109 @@
+# Defaults are the primary region's shape. values-primary.yaml and
+# values-dr.yaml hold everything that differs per region; the failover CLI
+# changes only api.autoscaling.minReplicas, workers.enabled and
+# workers.replicas (with `helm upgrade --reuse-values`).
+
+# Region this release runs in, and its deploy-time role. The role is a label
+# only: after a failover the "dr" release is the writer until failback.
+region: us-east-1
+regionRole: primary
+
+image:
+  repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/dr-app/order-api
+  tag: "1.4.2"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  # Must match the EKS Pod Identity association in Terraform
+  # (regional-stack app_namespace / app_service_account).
+  name: order-api
+
+# Non-secret runtime configuration. The DB password comes from Secrets
+# Manager at runtime (Pod Identity), never from a Kubernetes Secret.
+config:
+  # This region's regional Aurora cluster endpoint. In the DR region it is
+  # read-only until promotion; the API's /healthz/ready checks connectivity,
+  # not writability, so the standby still reports ready.
+  dbHost: dr-app-us-east-1.cluster-cexample0001.us-east-1.rds.amazonaws.com
+  dbReaderHost: dr-app-us-east-1.cluster-ro-cexample0001.us-east-1.rds.amazonaws.com
+  dbSecretId: dr-app/aurora-master
+  cacheHost: master.dr-app-us-east-1-valkey.example.use1.cache.amazonaws.com
+  bucketName: example-dr-app-data-us-east-1
+  logLevel: info
+
+api:
+  containerPort: 8080
+  # Used only when autoscaling is disabled.
+  replicas: 3
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    # The failover CLI raises this in the region it promotes.
+    minReplicas: 3
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 60
+  pdb:
+    minAvailable: 2
+  # preStop sleep keeps the pod serving while the ALB deregisters it; the
+  # grace period must cover the sleep plus in-flight requests.
+  preStopSleepSeconds: 20
+  terminationGracePeriodSeconds: 60
+
+workers:
+  # Workers consume jobs and write to the database, so they run only in the
+  # region that holds the Aurora writer. The failover runbook scales them to
+  # 0 in the fenced region and enables them in the promoted one.
+  enabled: true
+  replicas: 2
+  healthPort: 8081
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # Long enough to finish (or checkpoint) the job in hand after SIGTERM.
+  terminationGracePeriodSeconds: 120
+
+topologySpread:
+  # DoNotSchedule keeps replicas spread across all three zones. The standby
+  # uses ScheduleAnyway so a small node group never blocks scheduling.
+  whenUnsatisfiable: DoNotSchedule
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  # Global name (Route 53 failover record) and this region's own name (what
+  # the Route 53 health check probes). The ALB answers for both.
+  host: orders.example.com
+  regionalHost: us-east-1.orders.example.com
+  certificateArn: arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-4000-8000-000000000001
+  scheme: internet-facing
+  sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+  healthcheckPath: /healthz/ready
+  # ALB names are limited to 32 characters.
+  loadBalancerName: dr-app-us-east-1
+  deregistrationDelaySeconds: 15
+
+networkPolicy:
+  enabled: true
+  # ALB targets are pod IPs (target-type ip); the ALB's nodes live in the
+  # public subnets, so ingress is allowed from the VPC CIDR.
+  albSourceCidrs:
+    - 10.10.0.0/16
+  # Aurora and Valkey live in the data subnets.
+  dataSubnetCidrs:
+    - 10.10.192.0/22
+    - 10.10.196.0/22
+    - 10.10.200.0/22
+  # HTTPS egress for AWS APIs (Secrets Manager, S3). Narrow it to VPC
+  # interface endpoints if the VPC has them.
+  awsApiEgress: true

@@ -1,0 +1,33 @@
+{
+  "app": "dr-app",
+  "global_cluster_id": "dr-app-global",
+  "primary_region": "us-east-1",
+  "dr_region": "us-west-2",
+  "max_replication_lag_seconds": 5,
+  "hosted_zone_id": "Z0000000EXAMPLE",
+  "record_name": "orders.example.com",
+  "regions": {
+    "us-east-1": {
+      "cluster_id": "dr-app-us-east-1",
+      "cluster_arn": "arn:aws:rds:us-east-1:123456789012:cluster:dr-app-us-east-1",
+      "health_url": "https://us-east-1.orders.example.com/healthz/ready",
+      "health_check_id": "00000000-0000-4000-8000-0000000000e1",
+      "kube_context": "arn:aws:eks:us-east-1:123456789012:cluster/dr-app-us-east-1-eks",
+      "namespace": "orders",
+      "release": "dr-app",
+      "chart": "helm/dr-app",
+      "active_scale": { "api_min_replicas": 3, "workers": 2 }
+    },
+    "us-west-2": {
+      "cluster_id": "dr-app-us-west-2",
+      "cluster_arn": "arn:aws:rds:us-west-2:123456789012:cluster:dr-app-us-west-2",
+      "health_url": "https://us-west-2.orders.example.com/healthz/ready",
+      "health_check_id": "00000000-0000-4000-8000-0000000000e2",
+      "kube_context": "arn:aws:eks:us-west-2:123456789012:cluster/dr-app-us-west-2-eks",
+      "namespace": "orders",
+      "release": "dr-app",
+      "chart": "helm/dr-app",
+      "active_scale": { "api_min_replicas": 3, "workers": 2 }
+    }
+  }
+}

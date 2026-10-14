@@ -1,0 +1,25 @@
+# Copy to terraform.tfvars. Placeholder values only.
+primary_region = "us-east-1"
+dr_region      = "us-west-2"
+
+# From `terraform output global_data_inputs` in environments/primary and dr.
+primary = {
+  kms_key_arn          = "arn:aws:kms:us-east-1:123456789012:key/00000000-0000-4000-8000-000000000001"
+  db_subnet_group_name = "dr-app-us-east-1-aurora"
+  db_security_group_id = "sg-0123456789abcdef0"
+}
+dr = {
+  kms_key_arn          = "arn:aws:kms:us-west-2:123456789012:key/00000000-0000-4000-8000-000000000002"
+  db_subnet_group_name = "dr-app-us-west-2-aurora"
+  db_security_group_id = "sg-0fedcba9876543210"
+}
+
+# Phase 1: hosted zone and name only. Phase 2: add the ALBs from
+#   kubectl -n orders get ingress order-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+# in each region (zone IDs: the ALB's CanonicalHostedZoneId).
+dns = {
+  hosted_zone_id = "Z0000000EXAMPLE"
+  record_name    = "orders.example.com"
+  # primary_alb = { dns_name = "k8s-orders-....us-east-1.elb.amazonaws.com", zone_id = "Z35SXDOTRQ7X7K" }
+  # dr_alb      = { dns_name = "k8s-orders-....us-west-2.elb.amazonaws.com", zone_id = "Z1H1FL5HABSF5" }
+}

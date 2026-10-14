@@ -1,0 +1,14 @@
+apiVersion: v2
+name: dr-app
+description: Synthetic order API and worker for the warm-standby multi-region EKS DR reference implementation.
+type: application
+version: 0.1.0
+appVersion: "1.4.2"
+kubeVersion: ">=1.33.0-0"
+keywords:
+  - disaster-recovery
+  - eks
+  - multi-region
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

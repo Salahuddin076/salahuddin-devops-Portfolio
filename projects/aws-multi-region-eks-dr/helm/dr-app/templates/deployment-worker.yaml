@@ -1,0 +1,85 @@
+# Job consumer. Its replica count is the fencing lever: 0 in any region that
+# does not hold the Aurora writer, so jobs are never processed in two places
+# at once. Duplicate deliveries that still happen around a failover are
+# skipped by the idempotency-key check (src/worker_idempotency.py).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dr-app.fullname" . }}-worker
+  labels:
+    {{- include "dr-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+  annotations:
+    dr.example.com/workers-enabled: {{ .Values.workers.enabled | quote }}
+spec:
+  replicas: {{ include "dr-app.workerReplicas" . }}
+  revisionHistoryLimit: 5
+  strategy:
+    # Never two generations of workers at once during a rollout.
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "dr-app.selectorLabels" (dict "root" . "component" "worker") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dr-app.commonLabels" . | nindent 8 }}
+        {{- include "dr-app.selectorLabels" (dict "root" . "component" "worker") | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "dr-app.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ .Values.workers.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- include "dr-app.podSecurityContext" . | nindent 8 }}
+      topologySpreadConstraints:
+        {{- include "dr-app.topologySpread" (dict "root" . "component" "worker") | nindent 8 }}
+      containers:
+        - name: order-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["work", "--health-port", "{{ .Values.workers.healthPort }}"]
+          ports:
+            - name: health
+              containerPort: {{ .Values.workers.healthPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "dr-app.fullname" . }}-config
+          env:
+            - name: WORKER_REGION
+              value: {{ .Values.region | quote }}
+          resources:
+            {{- toYaml .Values.workers.resources | nindent 12 }}
+          securityContext:
+            {{- include "dr-app.containerSecurityContext" . | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /healthz/live
+              port: health
+            periodSeconds: 2
+            failureThreshold: 30
+          # Ready = connected to the DB writer and the queue. A worker in a
+          # region whose DB is read-only never becomes ready.
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: health
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: health
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 4
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

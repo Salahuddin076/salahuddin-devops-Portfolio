@@ -1,0 +1,44 @@
+# DR region (us-west-2): warm standby. The API runs small and serves the
+# Route 53 health check; workers stay off until promotion (the failover CLI
+# sets workers.enabled=true and raises api.autoscaling.minReplicas).
+region: us-west-2
+regionRole: dr
+
+image:
+  # ECR replication copies images to the DR registry; pulling cross-region
+  # during a us-east-1 outage would fail.
+  repository: 123456789012.dkr.ecr.us-west-2.amazonaws.com/dr-app/order-api
+
+config:
+  # The secondary cluster's endpoint: read-only until promotion.
+  dbHost: dr-app-us-west-2.cluster-cexample0002.us-west-2.rds.amazonaws.com
+  dbReaderHost: dr-app-us-west-2.cluster-ro-cexample0002.us-west-2.rds.amazonaws.com
+  cacheHost: master.dr-app-us-west-2-valkey.example.usw2.cache.amazonaws.com
+  bucketName: example-dr-app-data-us-west-2
+
+api:
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 12
+  pdb:
+    minAvailable: 1
+
+workers:
+  enabled: false
+  replicas: 2
+
+topologySpread:
+  whenUnsatisfiable: ScheduleAnyway
+
+ingress:
+  regionalHost: us-west-2.orders.example.com
+  certificateArn: arn:aws:acm:us-west-2:123456789012:certificate/00000000-0000-4000-8000-000000000002
+  loadBalancerName: dr-app-us-west-2
+
+networkPolicy:
+  albSourceCidrs:
+    - 10.20.0.0/16
+  dataSubnetCidrs:
+    - 10.20.192.0/22
+    - 10.20.196.0/22
+    - 10.20.200.0/22

@@ -1,0 +1,43 @@
+{{- if .Values.ingress.enabled }}
+# The AWS Load Balancer Controller turns this into an ALB. Terraform never
+# creates the ALB; it reads the DNS name afterwards for Route 53 (phase 2 of
+# the bootstrap, docs/operations.md).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dr-app.fullname" . }}-api
+  labels:
+    {{- include "dr-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: {{ .Values.ingress.loadBalancerName | trunc 32 | quote }}
+    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme }}
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: {{ required "ingress.certificateArn is required" .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/ssl-policy: {{ .Values.ingress.sslPolicy }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.ingress.healthcheckPath }}
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds={{ .Values.ingress.deregistrationDelaySeconds }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: deletion_protection.enabled=true,routing.http.drop_invalid_header_fields.enabled=true
+    alb.ingress.kubernetes.io/tags: dr-region={{ .Values.region }},dr-region-role={{ .Values.regionRole }}
+spec:
+  ingressClassName: alb
+  rules:
+    {{- range (list .Values.ingress.host .Values.ingress.regionalHost) }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dr-app.fullname" $ }}-api
+                port:
+                  name: http
+    {{- end }}
+{{- end }}
