@@ -1,0 +1,16 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Lambda build output (archive_file writes to <root>/.build/)
+.build/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
