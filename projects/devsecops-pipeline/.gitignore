@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+# scanner outputs and caches produced by local runs
+*.sarif
+sbom.*.json
+.trivy-cache/
+.scan/
+reports/
+lint-all.txt

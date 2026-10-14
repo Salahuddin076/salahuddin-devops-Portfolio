@@ -1,0 +1,4 @@
+# Runtime dependencies for the demo service: none (standard library only).
+# The SCA job still scans this file so that adding a dependency is covered
+# from the first commit. The vulnerable-lockfile demo lives in
+# ../tests/fixtures/sca/requirements-vulnerable.txt and is never built.

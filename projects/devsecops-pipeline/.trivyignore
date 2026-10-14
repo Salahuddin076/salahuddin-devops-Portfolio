@@ -1,0 +1,11 @@
+# Trivy ignore file for the demo image. Every entry MUST carry:
+#   - an expiry in Trivy's native form `exp:YYYY-MM-DD` (Trivy stops honouring
+#     the entry after that date, so the finding comes back by itself), and
+#   - a reason after `#` (why it is acceptable, who owns it, what closes it).
+# policy/trivyignore_check.py enforces both, rejects expired entries, and
+# rejects expiries more than 180 days out. Process: docs/operations.md.
+#
+# util-linux mount helper (HIGH, no Debian fix yet on 2026-10-14). The CI
+# gate already uses --ignore-unfixed, so this entry only matters when someone
+# sets ignore-unfixed: false; it records the decision instead of hiding it.
+CVE-2026-76642 exp:2027-01-31 # reason: container runs as UID 10001 with all capabilities dropped and never calls mount; owner: platform-team; revisit when Debian ships a fix

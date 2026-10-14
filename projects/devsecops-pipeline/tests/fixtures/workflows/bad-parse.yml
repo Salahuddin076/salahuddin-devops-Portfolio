@@ -1,0 +1,3 @@
+name: bad-parse
+on: push
+	permissions: read-all

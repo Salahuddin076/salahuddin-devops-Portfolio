@@ -1,0 +1,21 @@
+name: bad-injection
+on:
+  issues:
+    types: [opened]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ github.event.issue.title }}"
+      - name: multi-line
+        run: |
+          echo "start"
+          echo "branch ${{ github.head_ref }}"
+          echo "body ${{ github.event.pull_request.body }}"
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            console.log("${{ github.event.comment.body }}")

@@ -1,0 +1,82 @@
+name: devsecops-pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "projects/devsecops-pipeline/**"
+      - ".github/workflows/devsecops-pipeline.yml"
+      - ".github/workflows/devsecops-reusable.yml"
+  pull_request:
+    paths:
+      - "projects/devsecops-pipeline/**"
+      - ".github/workflows/devsecops-pipeline.yml"
+      - ".github/workflows/devsecops-reusable.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devsecops-pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    name: Policy tests + workflow lint + trivyignore expiry
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: projects/devsecops-pipeline
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest)
+        run: python -m unittest discover -s tests -v
+      - name: Lint this project's workflows (blocking)
+        run: |
+          python policy/check_workflows.py --uri-base ../.. \
+            ../../.github/workflows/devsecops-reusable.yml \
+            ../../.github/workflows/devsecops-pipeline.yml
+      - name: Lint every workflow in the repo (report only)
+        run: |
+          python policy/check_workflows.py --uri-base ../.. ../../.github/workflows > lint-all.txt || true
+          { echo '## Workflow lint, whole repo (report only)'; echo '```'; tail -n 12 lint-all.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: .trivyignore entries have a reason and have not expired
+        run: python policy/trivyignore_check.py .trivyignore
+
+  devsecops:
+    name: Supply-chain pipeline
+    needs: policy
+    uses: ./.github/workflows/devsecops-reusable.yml
+    # The caller sets the ceiling for every job in the called workflow, and
+    # GitHub checks that ceiling when the run starts, even for jobs whose `if:`
+    # will skip them. Each called job then narrows to its own `permissions:`,
+    # so `id-token`, `packages` and `attestations` only ever reach
+    # sign-and-attest, and that job only runs when `publish: true` on main.
+    permissions:
+      contents: read
+      security-events: write
+      packages: write
+      id-token: write
+      attestations: write
+    with:
+      working-directory: projects/devsecops-pipeline/app
+      image-name: devsecops-demo
+      image-severity: CRITICAL,HIGH
+      sca-severity: CRITICAL,HIGH
+      ignore-unfixed: true
+      trivyignore: projects/devsecops-pipeline/.trivyignore
+      gitleaks-config: projects/devsecops-pipeline/.gitleaks.toml
+      enable-dast: true
+      zap-rules-file: projects/devsecops-pipeline/app/.zap/rules.tsv
+      sonar-enabled: false # no Sonar server for a portfolio repo; see docs/operations.md
+      publish: false # no registry writes or signing identities from this repo; see ADR 0003
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

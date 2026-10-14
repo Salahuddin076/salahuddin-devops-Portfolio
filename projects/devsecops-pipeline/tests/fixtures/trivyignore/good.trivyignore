@@ -1,0 +1,5 @@
+# all entries valid on 2026-10-14
+CVE-2026-0001 exp:2026-12-31 # reason: not reachable; owner: team-a
+CVE-2026-0002 # exp:2027-01-15 reason: base image only, fix pending upstream
+
+GHSA-aaaa-bbbb-cccc exp:2026-11-01 # tracked in the vuln backlog

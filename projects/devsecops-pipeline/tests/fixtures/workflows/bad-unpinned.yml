@@ -1,0 +1,16 @@
+name: bad-unpinned
+on: push
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+      - uses: hashicorp/setup-terraform@v3
+      - uses: some-org/some-action@main
+      - uses: some-org/no-ref-action
+      - uses: docker://alpine:3.20
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+  reusable:
+    uses: other-org/workflows/.github/workflows/ci.yml@v1

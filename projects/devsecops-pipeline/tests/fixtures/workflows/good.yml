@@ -1,0 +1,39 @@
+# Passes every rule: top-level read-only token, SHA pins with version
+# comments, env-mediated event data, job-level id-token, no persisted creds.
+name: good
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: ./.github/actions/local
+      - name: Safe use of a PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "title: $TITLE"
+          echo "sha: ${{ github.sha }}"
+  sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - run: echo signing
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: git push origin HEAD:refs/heads/release
+  reuse:
+    uses: ./.github/workflows/devsecops-reusable.yml

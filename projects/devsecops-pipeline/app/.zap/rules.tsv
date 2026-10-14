@@ -1,0 +1,2 @@
+10049	IGNORE	(Storable and Cacheable Content: informational; every response already sends Cache-Control: no-store)
+10104	IGNORE	(User Agent Fuzzer: informational on a three-route JSON service)

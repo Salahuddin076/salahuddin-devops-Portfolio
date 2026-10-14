@@ -1,0 +1,14 @@
+# pull_request_target that only checks out the base branch (no PR code runs).
+name: ok-pr-target-base
+on: pull_request_target
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: echo "labelling"

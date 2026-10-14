@@ -1,0 +1,6 @@
+# SCA demo fixture: deliberately old pins with published advisories.
+# Never installed or built; only scanned to show the SCA gate failing.
+# The real app (app/requirements.txt) has no dependencies.
+PyYAML==5.3
+Jinja2==2.10
+urllib3==1.24.1

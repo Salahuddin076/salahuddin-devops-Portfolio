@@ -1,0 +1,25 @@
+# gitleaks configuration for this project.
+# Extends the upstream default rules. The allowlists below are the exception
+# list, and every entry carries its reason. Keep them narrow: a broad
+# allowlist is a silent hole in the secrets gate.
+title = "devsecops-pipeline gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic linter fixtures: workflow files written to trip the rules"
+paths = [
+  '''projects/devsecops-pipeline/tests/fixtures/''',
+]
+
+[[allowlists]]
+# First full-history run (2026-10-14) flagged 4 generic-api-key hits in
+# projects/ecs-fargate-blue-green/*.example files. They are image URIs whose
+# tag is a 40-hex commit SHA under the documentation account 123456789012,
+# not credentials. The match is pinned to that exact URI shape.
+description = "Example ECR image URIs tagged with a commit SHA (documentation account id)"
+regexTarget = "line"
+regexes = [
+  '''123456789012\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/[a-z0-9._/-]+:[0-9a-f]{40}''',
+]

@@ -1,0 +1,7 @@
+CVE-2026-1000
+CVE-2026-1001 exp:2026-12-31
+CVE-2026-1002 exp:2026-01-01 # reason: expired on purpose
+CVE-2026-1003 exp:2030-01-01 # reason: far too long
+CVE-2026-1004 exp:2026-13-40 # reason: not a date
+CVE-2026-0001 exp:2026-12-31 # reason: first
+CVE-2026-0001 exp:2026-12-31 # reason: duplicate
