@@ -1,0 +1,1114 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.14.8",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    }
+  },
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "logs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "example-shop-access-logs",
+            "force_destroy": false,
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            },
+            "timeouts": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "logs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "ignore_public_acls": true,
+            "restrict_public_buckets": true,
+            "skip_destroy": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_s3_bucket.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "assets",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "example-shop-assets",
+            "force_destroy": false,
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            },
+            "timeouts": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "assets",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "ignore_public_acls": true,
+            "restrict_public_buckets": true,
+            "skip_destroy": null,
+            "bucket": "example-shop-assets"
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_security_group.web",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "description": "Public ALB",
+            "name": "example-web",
+            "egress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "all egress",
+                "from_port": 0,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "-1",
+                "security_groups": [],
+                "self": false,
+                "to_port": 0
+              }
+            ],
+            "ingress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "HTTPS from the internet",
+                "from_port": 443,
+                "ipv6_cidr_blocks": [
+                  "::/0"
+                ],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 443
+              },
+              {
+                "cidr_blocks": [
+                  "10.20.0.0/16"
+                ],
+                "description": "SSH from the VPN range",
+                "from_port": 22,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 22
+              }
+            ],
+            "revoke_rules_on_delete": false,
+            "vpc_id": "vpc-0123456789abcdef0",
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            },
+            "timeouts": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_vpc_security_group_ingress_rule.app_from_alb",
+          "mode": "managed",
+          "type": "aws_vpc_security_group_ingress_rule",
+          "name": "app_from_alb",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "description": "App port from the ALB only",
+            "from_port": 8080,
+            "to_port": 8080,
+            "ip_protocol": "tcp",
+            "cidr_ipv4": null,
+            "cidr_ipv6": null,
+            "prefix_list_id": null,
+            "tags": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_iam_policy.app_read_assets",
+          "mode": "managed",
+          "type": "aws_iam_policy",
+          "name": "app_read_assets",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "example-app-read-assets",
+            "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"ReadAssets\", \"Effect\": \"Allow\", \"Action\": [\"s3:GetObject\"], \"Resource\": \"arn:aws:s3:::example-shop-assets/*\"}]}",
+            "description": null,
+            "path": "/",
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_iam_role_policy.deploy",
+          "mode": "managed",
+          "type": "aws_iam_role_policy",
+          "name": "deploy",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "example-deploy",
+            "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"UpdateService\", \"Effect\": \"Allow\", \"Action\": [\"ecs:UpdateService\", \"ecs:DescribeServices\"], \"Resource\": \"*\"}, {\"Sid\": \"DenyEverythingElse\", \"Effect\": \"Deny\", \"NotAction\": [\"ecs:*\"], \"Resource\": \"*\"}]}",
+            "description": null,
+            "path": "/",
+            "tags": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_db_instance.orders",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "orders",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "identifier": "example-orders",
+            "engine": "postgres",
+            "engine_version": "16.4",
+            "instance_class": "db.t4g.medium",
+            "allocated_storage": 50,
+            "storage_type": "gp3",
+            "storage_encrypted": true,
+            "multi_az": false,
+            "publicly_accessible": false,
+            "deletion_protection": true,
+            "manage_master_user_password": true,
+            "username": "app_admin",
+            "skip_final_snapshot": false,
+            "backup_retention_period": 7,
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_cloudtrail.main",
+          "mode": "managed",
+          "type": "aws_cloudtrail",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "example-org-trail",
+            "s3_bucket_name": "example-cloudtrail-logs",
+            "include_global_service_events": true,
+            "is_multi_region_trail": true,
+            "is_organization_trail": false,
+            "enable_logging": true,
+            "enable_log_file_validation": true,
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_lb.public",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "public",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "example-public",
+            "internal": false,
+            "load_balancer_type": "application",
+            "drop_invalid_header_fields": true,
+            "enable_deletion_protection": true,
+            "idle_timeout": 60,
+            "ip_address_type": "ipv4",
+            "subnets": [
+              "subnet-0123456789abcdef0",
+              "subnet-0fedcba9876543210"
+            ],
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_lb.internal_api",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "internal_api",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "example-internal-api",
+            "internal": true,
+            "load_balancer_type": "application",
+            "drop_invalid_header_fields": true,
+            "enable_deletion_protection": true,
+            "idle_timeout": 60,
+            "ip_address_type": "ipv4",
+            "subnets": [
+              "subnet-0123456789abcdef0",
+              "subnet-0fedcba9876543210"
+            ],
+            "tags": null,
+            "tags_all": {
+              "project": "example-shop",
+              "owner": "platform-team",
+              "managed-by": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        }
+      ],
+      "child_modules": [
+        {
+          "address": "module.waf",
+          "resources": [
+            {
+              "address": "module.waf.aws_wafv2_web_acl.this",
+              "mode": "managed",
+              "type": "aws_wafv2_web_acl",
+              "name": "this",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "schema_version": 0,
+              "values": {
+                "name": "edge-demo-web-acl",
+                "scope": "REGIONAL",
+                "default_action": [
+                  {
+                    "allow": [
+                      {}
+                    ],
+                    "block": []
+                  }
+                ],
+                "description": "Edge protection",
+                "tags": {
+                  "component": "waf"
+                }
+              },
+              "sensitive_values": {}
+            },
+            {
+              "address": "module.waf.aws_wafv2_web_acl_association.alb[0]",
+              "mode": "managed",
+              "type": "aws_wafv2_web_acl_association",
+              "name": "alb",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "schema_version": 0,
+              "values": {
+                "timeouts": null
+              },
+              "sensitive_values": {},
+              "index": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "bucket": "example-shop-access-logs",
+          "force_destroy": false,
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          },
+          "timeouts": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "region": true,
+          "bucket_domain_name": true,
+          "tags_all": {}
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_s3_bucket_public_access_block.logs",
+      "mode": "managed",
+      "type": "aws_s3_bucket_public_access_block",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "ignore_public_acls": true,
+          "restrict_public_buckets": true,
+          "skip_destroy": null
+        },
+        "after_unknown": {
+          "id": true,
+          "bucket": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_s3_bucket.assets",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "bucket": "example-shop-assets",
+          "force_destroy": false,
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          },
+          "timeouts": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "region": true,
+          "bucket_domain_name": true,
+          "tags_all": {}
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_s3_bucket_public_access_block.assets",
+      "mode": "managed",
+      "type": "aws_s3_bucket_public_access_block",
+      "name": "assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "ignore_public_acls": true,
+          "restrict_public_buckets": true,
+          "skip_destroy": null,
+          "bucket": "example-shop-assets"
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group.web",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "description": "Public ALB",
+          "name": "example-web",
+          "egress": [
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "description": "all egress",
+              "from_port": 0,
+              "ipv6_cidr_blocks": [],
+              "prefix_list_ids": [],
+              "protocol": "-1",
+              "security_groups": [],
+              "self": false,
+              "to_port": 0
+            }
+          ],
+          "ingress": [
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "description": "HTTPS from the internet",
+              "from_port": 443,
+              "ipv6_cidr_blocks": [
+                "::/0"
+              ],
+              "prefix_list_ids": [],
+              "protocol": "tcp",
+              "security_groups": [],
+              "self": false,
+              "to_port": 443
+            },
+            {
+              "cidr_blocks": [
+                "10.20.0.0/16"
+              ],
+              "description": "SSH from the VPN range",
+              "from_port": 22,
+              "ipv6_cidr_blocks": [],
+              "prefix_list_ids": [],
+              "protocol": "tcp",
+              "security_groups": [],
+              "self": false,
+              "to_port": 22
+            }
+          ],
+          "revoke_rules_on_delete": false,
+          "vpc_id": "vpc-0123456789abcdef0",
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          },
+          "timeouts": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "owner_id": true,
+          "name_prefix": true,
+          "tags_all": {}
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_vpc_security_group_ingress_rule.app_from_alb",
+      "mode": "managed",
+      "type": "aws_vpc_security_group_ingress_rule",
+      "name": "app_from_alb",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "description": "App port from the ALB only",
+          "from_port": 8080,
+          "to_port": 8080,
+          "ip_protocol": "tcp",
+          "cidr_ipv4": null,
+          "cidr_ipv6": null,
+          "prefix_list_id": null,
+          "tags": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "security_group_id": true,
+          "referenced_security_group_id": true,
+          "security_group_rule_id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_iam_policy.app_read_assets",
+      "mode": "managed",
+      "type": "aws_iam_policy",
+      "name": "app_read_assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "example-app-read-assets",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"ReadAssets\", \"Effect\": \"Allow\", \"Action\": [\"s3:GetObject\"], \"Resource\": \"arn:aws:s3:::example-shop-assets/*\"}]}",
+          "description": null,
+          "path": "/",
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "policy_id": true,
+          "attachment_count": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_iam_role_policy.deploy",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "deploy",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "example-deploy",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"UpdateService\", \"Effect\": \"Allow\", \"Action\": [\"ecs:UpdateService\", \"ecs:DescribeServices\"], \"Resource\": \"*\"}, {\"Sid\": \"DenyEverythingElse\", \"Effect\": \"Deny\", \"NotAction\": [\"ecs:*\"], \"Resource\": \"*\"}]}",
+          "description": null,
+          "path": "/",
+          "tags": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "policy_id": true,
+          "attachment_count": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_db_instance.orders",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "orders",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "identifier": "example-orders",
+          "engine": "postgres",
+          "engine_version": "16.4",
+          "instance_class": "db.t4g.medium",
+          "allocated_storage": 50,
+          "storage_type": "gp3",
+          "storage_encrypted": true,
+          "multi_az": false,
+          "publicly_accessible": false,
+          "deletion_protection": true,
+          "manage_master_user_password": true,
+          "username": "app_admin",
+          "skip_final_snapshot": false,
+          "backup_retention_period": 7,
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "endpoint": true,
+          "kms_key_id": true,
+          "address": true,
+          "master_user_secret": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudtrail.main",
+      "mode": "managed",
+      "type": "aws_cloudtrail",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "example-org-trail",
+          "s3_bucket_name": "example-cloudtrail-logs",
+          "include_global_service_events": true,
+          "is_multi_region_trail": true,
+          "is_organization_trail": false,
+          "enable_logging": true,
+          "enable_log_file_validation": true,
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "home_region": true,
+          "kms_key_id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lb.public",
+      "mode": "managed",
+      "type": "aws_lb",
+      "name": "public",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "example-public",
+          "internal": false,
+          "load_balancer_type": "application",
+          "drop_invalid_header_fields": true,
+          "enable_deletion_protection": true,
+          "idle_timeout": 60,
+          "ip_address_type": "ipv4",
+          "subnets": [
+            "subnet-0123456789abcdef0",
+            "subnet-0fedcba9876543210"
+          ],
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "dns_name": true,
+          "zone_id": true,
+          "security_groups": true,
+          "tags_all": {}
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lb.internal_api",
+      "mode": "managed",
+      "type": "aws_lb",
+      "name": "internal_api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "example-internal-api",
+          "internal": true,
+          "load_balancer_type": "application",
+          "drop_invalid_header_fields": true,
+          "enable_deletion_protection": true,
+          "idle_timeout": 60,
+          "ip_address_type": "ipv4",
+          "subnets": [
+            "subnet-0123456789abcdef0",
+            "subnet-0fedcba9876543210"
+          ],
+          "tags": null,
+          "tags_all": {
+            "project": "example-shop",
+            "owner": "platform-team",
+            "managed-by": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "dns_name": true,
+          "zone_id": true,
+          "security_groups": true,
+          "tags_all": {}
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.waf.aws_wafv2_web_acl.this",
+      "module_address": "module.waf",
+      "mode": "managed",
+      "type": "aws_wafv2_web_acl",
+      "name": "this",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "edge-demo-web-acl",
+          "scope": "REGIONAL",
+          "default_action": [
+            {
+              "allow": [
+                {}
+              ],
+              "block": []
+            }
+          ],
+          "description": "Edge protection",
+          "tags": {
+            "component": "waf"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "capacity": true,
+          "lock_token": true,
+          "rule": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.waf.aws_wafv2_web_acl_association.alb[0]",
+      "module_address": "module.waf",
+      "mode": "managed",
+      "type": "aws_wafv2_web_acl_association",
+      "name": "alb",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "timeouts": null
+        },
+        "after_unknown": {
+          "id": true,
+          "resource_arn": true,
+          "web_acl_arn": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 0
+    }
+  ],
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "logs",
+          "provider_config_key": "aws",
+          "expressions": {
+            "bucket": {
+              "constant_value": "example-shop-access-logs"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "logs",
+          "provider_config_key": "aws",
+          "expressions": {
+            "bucket": {
+              "references": [
+                "aws_s3_bucket.logs.id",
+                "aws_s3_bucket.logs"
+              ]
+            },
+            "block_public_acls": {
+              "constant_value": true
+            },
+            "block_public_policy": {
+              "constant_value": true
+            },
+            "ignore_public_acls": {
+              "constant_value": true
+            },
+            "restrict_public_buckets": {
+              "constant_value": true
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "assets",
+          "provider_config_key": "aws",
+          "expressions": {
+            "bucket": {
+              "constant_value": "example-shop-assets"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket_public_access_block",
+          "name": "assets",
+          "provider_config_key": "aws",
+          "expressions": {
+            "bucket": {
+              "references": [
+                "aws_s3_bucket.assets.id",
+                "aws_s3_bucket.assets"
+              ]
+            },
+            "block_public_acls": {
+              "constant_value": true
+            },
+            "block_public_policy": {
+              "constant_value": true
+            },
+            "ignore_public_acls": {
+              "constant_value": true
+            },
+            "restrict_public_buckets": {
+              "constant_value": true
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_lb.public",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "public",
+          "provider_config_key": "aws",
+          "expressions": {
+            "internal": {
+              "constant_value": false
+            },
+            "load_balancer_type": {
+              "constant_value": "application"
+            },
+            "security_groups": {
+              "references": [
+                "aws_security_group.web.id",
+                "aws_security_group.web"
+              ]
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_lb.internal_api",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "internal_api",
+          "provider_config_key": "aws",
+          "expressions": {
+            "internal": {
+              "constant_value": true
+            },
+            "load_balancer_type": {
+              "constant_value": "application"
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_cloudtrail.main",
+          "mode": "managed",
+          "type": "aws_cloudtrail",
+          "name": "main",
+          "provider_config_key": "aws",
+          "expressions": {
+            "enable_log_file_validation": {
+              "constant_value": true
+            }
+          },
+          "schema_version": 0
+        }
+      ],
+      "module_calls": {
+        "waf": {
+          "source": "../../modules/waf",
+          "expressions": {
+            "name_prefix": {
+              "constant_value": "edge-demo"
+            },
+            "associate_alb": {
+              "constant_value": true
+            },
+            "alb_arn": {
+              "references": [
+                "aws_lb.public.arn",
+                "aws_lb.public"
+              ]
+            }
+          },
+          "module": {
+            "resources": [
+              {
+                "address": "aws_wafv2_web_acl.this",
+                "mode": "managed",
+                "type": "aws_wafv2_web_acl",
+                "name": "this",
+                "provider_config_key": "aws",
+                "expressions": {
+                  "name": {
+                    "references": [
+                      "local.web_acl_name"
+                    ]
+                  },
+                  "scope": {
+                    "references": [
+                      "var.scope"
+                    ]
+                  }
+                },
+                "schema_version": 0
+              },
+              {
+                "address": "aws_wafv2_web_acl_association.alb",
+                "mode": "managed",
+                "type": "aws_wafv2_web_acl_association",
+                "name": "alb",
+                "provider_config_key": "aws",
+                "expressions": {
+                  "resource_arn": {
+                    "references": [
+                      "var.alb_arn"
+                    ]
+                  },
+                  "web_acl_arn": {
+                    "references": [
+                      "aws_wafv2_web_acl.this.arn",
+                      "aws_wafv2_web_acl.this"
+                    ]
+                  }
+                },
+                "schema_version": 0,
+                "count_expression": {
+                  "references": [
+                    "var.associate_alb"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "timestamp": "2026-10-14T08:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

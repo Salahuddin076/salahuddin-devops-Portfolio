@@ -1,0 +1,25 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+plan.json
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Reports
+reports/
+*.sarif
+
+# Python
+__pycache__/
+*.pyc
+
+# Exported WAF logs (may contain client IPs and URIs)
+waf-*.jsonl
+!sample-data/waf-logs.jsonl
+
+# Optional Checkov venv (docs/checkov.md)
+.venv-checkov/

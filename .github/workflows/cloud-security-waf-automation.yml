@@ -1,0 +1,105 @@
+name: cloud-security-waf-automation
+
+on:
+  push:
+    paths:
+      - "projects/cloud-security-waf-automation/**"
+      - ".github/workflows/cloud-security-waf-automation.yml"
+  pull_request:
+    paths:
+      - "projects/cloud-security-waf-automation/**"
+      - ".github/workflows/cloud-security-waf-automation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-security-waf-automation-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/cloud-security-waf-automation
+
+jobs:
+  python-tests:
+    name: Python unit tests + log summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+      - name: WAF log summary on the synthetic sample
+        run: python scripts/waf_log_summary.py sample-data/waf-logs.jsonl
+
+  policy-gate:
+    name: Policy gate (compliant plan must pass)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check_plan.py on the compliant fixture
+        run: python policy/check_plan.py policy/fixtures/plan-compliant.json
+      - name: check_plan.py must fail the non-compliant fixture
+        run: |
+          set +e
+          python policy/check_plan.py policy/fixtures/plan-noncompliant.json
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 on the non-compliant fixture, got $code"
+            exit 1
+          fi
+
+  policy-sarif:
+    name: Policy findings to code scanning (SARIF demo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # The only job allowed to write security events.
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check_plan.py on the non-compliant fixture (expected to find issues)
+        continue-on-error: true
+        run: |
+          mkdir -p reports
+          python policy/check_plan.py policy/fixtures/plan-noncompliant.json \
+            --format sarif --output reports/check_plan.sarif \
+            --artifact-uri projects/cloud-security-waf-automation/policy/fixtures/plan-noncompliant.json
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: projects/cloud-security-waf-automation/reports/check_plan.sarif
+          category: check-plan
+
+  terraform:
+    name: Terraform fmt + validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: validate modules and example
+        run: |
+          for dir in terraform/modules/waf terraform/modules/detective-response terraform/examples/basic; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done

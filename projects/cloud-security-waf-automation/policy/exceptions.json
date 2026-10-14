@@ -1,0 +1,18 @@
+{
+  "exceptions": [
+    {
+      "rule_id": "CSP-SG-001",
+      "resource": "aws_vpc_security_group_ingress_rule.legacy_bastion_ssh",
+      "owner": "platform-team@example.com",
+      "reason": "Vendor appliance only supports SSH from its dynamic IPv6 range; replacement with SSM Session Manager tracked in SEC-142",
+      "expires": "2027-03-31"
+    },
+    {
+      "rule_id": "CSP-RDS-001",
+      "resource": "aws_db_instance.reporting",
+      "owner": "data-team@example.com",
+      "reason": "Encrypted snapshot-restore migration scheduled for the Q2 maintenance window",
+      "expires": "2026-06-30"
+    }
+  ]
+}
