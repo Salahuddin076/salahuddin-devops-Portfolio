@@ -1,0 +1,95 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $np := .Values.networkPolicy }}
+# 1. main and webhook: HTTP in from the VPC only (ALB target-type ip sends
+#    traffic from its ENIs in the VPC). Nothing else may reach them.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "n8n.fullname" . }}-ingress
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/instance
+        operator: In
+        values: [{{ .Release.Name | quote }}]
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["main", "webhook"]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: {{ $np.vpcCidr }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.containerPort }}
+---
+# 2. workers: no ingress at all. They pull from Redis; nothing calls them.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "n8n.fullname" . }}-worker-ingress
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "n8n.selectorLabels" (dict "root" . "component" "worker") | nindent 6 }}
+  policyTypes:
+    - Ingress
+---
+# 3. every n8n pod: egress to DNS, to Postgres and Redis in the data subnets,
+#    and (optionally) HTTPS to the internet for workflow nodes. The VPC and
+#    the link-local range (instance metadata, Pod Identity agent) are carved
+#    out: n8n needs neither. The security groups on RDS and ElastiCache are
+#    the other half: they accept only the n8n pod security group (Terraform).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "n8n.fullname" . }}-egress
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "n8n.podLabels" . | nindent 6 }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        {{- range $np.dataSubnetCidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.database.port }}
+        - protocol: TCP
+          port: {{ .Values.redis.port }}
+    {{- if $np.allowInternetHttps }}
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - {{ $np.vpcCidr }}
+              - 169.254.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+    {{- end }}
+{{- end }}

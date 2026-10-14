@@ -1,0 +1,19 @@
+{{- range $component := list "main" "webhook" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "n8n.fullname" $ }}-{{ $component }}
+  labels:
+    {{- include "n8n.labels" $ | nindent 4 }}
+    {{- include "n8n.selectorLabels" (dict "root" $ "component" $component) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "n8n.selectorLabels" (dict "root" $ "component" $component) | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+{{- end }}

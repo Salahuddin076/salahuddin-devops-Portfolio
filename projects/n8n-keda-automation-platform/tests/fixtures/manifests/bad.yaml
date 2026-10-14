@@ -1,0 +1,78 @@
+# Deliberately non-compliant manifests: every check_chart_policy rule fires.
+# All values are synthetic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-main
+  namespace: n8n
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: n8n
+          image: n8nio/n8n:2.41.3
+          args: ["start"]
+          env:
+            - name: EXECUTIONS_MODE
+              value: "queue"
+            - name: N8N_ENCRYPTION_KEY
+              value: "synthetic-literal-encryption-key"
+            - name: DB_POSTGRESDB_PASSWORD
+              value: "synthetic-db-password"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-webhook
+  namespace: n8n
+spec:
+  template:
+    spec:
+      containers:
+        - name: n8n
+          image: n8nio/n8n:2.41.3
+          args: ["webhook"]
+          env:
+            - name: EXECUTIONS_MODE
+              value: "regular"
+            - name: LEGACY_REDIS_URL
+              value: "rediss://default:synthetic-pass@cache.example.com:6379"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-worker
+  namespace: n8n
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: n8n
+          image: n8nio/n8n:2.41.3
+          args: ["worker"]
+          env:
+            - name: EXECUTIONS_MODE
+              value: "queue"
+            - name: N8N_ENCRYPTION_KEY_FILE
+              value: "/mnt/secrets/encryption-key"
+            - name: EXECUTIONS_TIMEOUT
+              value: "600"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: n8n-worker
+  namespace: n8n
+spec:
+  scaleTargetRef:
+    name: n8n-worker
+  minReplicaCount: 0
+  cooldownPeriod: 30
+  triggers:
+    - type: redis
+      name: wrong-key
+      metadata:
+        listName: "bull:jobs"
+        listLength: "5"

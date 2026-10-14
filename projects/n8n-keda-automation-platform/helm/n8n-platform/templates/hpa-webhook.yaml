@@ -1,0 +1,36 @@
+# Webhook pods are CPU-bound request handlers, so plain CPU HPA fits them.
+# Workers are different: their load is the queue, not their CPU (ADR 0002).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "n8n.fullname" . }}-webhook
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+    {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "n8n.fullname" . }}-webhook
+  minReplicas: {{ .Values.webhook.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.webhook.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.webhook.autoscaling.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60

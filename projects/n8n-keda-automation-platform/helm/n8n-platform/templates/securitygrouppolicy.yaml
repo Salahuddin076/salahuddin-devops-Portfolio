@@ -1,0 +1,21 @@
+{{- if .Values.securityGroupsForPods.enabled }}
+# Security groups for pods (VPC CNI, ENABLE_POD_ENI=true): n8n pods get the
+# Terraform-created n8n pod security group on a branch ENI, and RDS and
+# ElastiCache accept only that group. This makes "only n8n pods reach the
+# data stores" hold at the AWS layer too, not just in NetworkPolicy.
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  name: {{ include "n8n.fullname" . }}
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "n8n.podLabels" . | nindent 6 }}
+  securityGroups:
+    groupIds:
+      {{- range (required "securityGroupsForPods.groupIds is required" .Values.securityGroupsForPods.groupIds) }}
+      - {{ . }}
+      {{- end }}
+{{- end }}

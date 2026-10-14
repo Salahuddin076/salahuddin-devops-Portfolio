@@ -1,0 +1,23 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+*.tfplan
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Helm
+helm/n8n-platform/charts/
+*.tgz
+
+# Local experiments (secret files, queue exports)
+secrets/
+*.secret
+.env
+
+# Python
+__pycache__/
+*.pyc

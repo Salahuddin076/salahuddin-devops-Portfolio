@@ -1,0 +1,200 @@
+# n8n-platform: n8n in queue mode. Every value here is safe to commit:
+# hostnames, secret *names* and sizes, never a secret value.
+# Env var names were checked against the n8nio/n8n:2.41.3 image
+# (README "Verified vs assumed n8n settings").
+
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  # One pinned version for main, webhook and worker. They must match: main
+  # runs the DB migrations that the other two depend on.
+  tag: "2.41.3"
+  pullPolicy: IfNotPresent
+
+# Public base URL. n8n builds webhook URLs from it (N8N_WEBHOOK_URL) and the
+# editor link (N8N_EDITOR_BASE_URL).
+publicUrl: https://n8n.example.com/
+
+# Must match the Pod Identity association in Terraform
+# (var.namespace / var.service_account, default n8n/n8n).
+serviceAccount:
+  name: n8n
+
+aws:
+  region: us-east-1
+
+# Secrets Manager -> Secrets Store CSI driver (ASCP, Pod Identity) -> files.
+# n8n reads every secret through its `<VAR>_FILE` support, so no value is
+# ever an env var or a Kubernetes Secret.
+secrets:
+  mountPath: /mnt/secrets
+  encryptionKey:
+    secretName: n8n/encryption-key
+    alias: encryption-key
+  db:
+    # JSON {"username": ..., "password": ...} for the n8n application role
+    # (not the RDS master user; see docs/operations.md).
+    secretName: n8n/db-app-credentials
+    keys:
+      username: db-username
+      password: db-password
+  redisAuth:
+    # Plain-string ElastiCache AUTH token. KEDA reads the same secret
+    # directly from Secrets Manager (ADR 0003).
+    secretName: n8n/redis-auth
+    alias: redis-password
+
+database:
+  host: n8n.cluster-placeholder.us-east-1.rds.amazonaws.com
+  port: 5432
+  name: n8n
+  schema: public
+  ssl: true
+  poolSize: 4
+
+redis:
+  host: master.n8n-queue.placeholder.use1.cache.amazonaws.com
+  port: 6379
+  db: 0
+  tls: true
+
+queue:
+  # n8n's Bull prefix (QUEUE_BULL_PREFIX, default "bull") and queue name
+  # ("jobs", fixed in n8n's code). Bull keys are <prefix>:<queue>:<type>, so
+  # the wait list KEDA measures is bull:jobs:wait.
+  bullPrefix: bull
+
+executions:
+  # The longest execution you expect. It becomes the hard timeout
+  # (EXECUTIONS_TIMEOUT / _MAX) and sizes the worker's shutdown window, so
+  # scale-in never kills a run that is allowed to finish.
+  maxExecutionSeconds: 600
+  prune: true
+  pruneMaxAgeHours: 168
+  pruneMaxCount: 50000
+
+proxyHops: 1
+timezone: UTC
+metrics: true
+
+containerPort: 5678
+
+# Shared pod hardening. n8n's image runs as node (uid 1000).
+podSecurity:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+main:
+  # Fixed at 1, enforced by the schema. The main process owns schedules,
+  # pollers and trigger registration; a second main fires every cron twice.
+  # Several mains need n8n's licensed multi-main mode with leader election.
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+  podDisruptionBudget:
+    # 1 lets a node drain evict the only main (a short UI/schedule gap).
+    # values-prod.yaml sets 0: drains wait for a planned restart.
+    maxUnavailable: 1
+  preStopSleepSeconds: 10
+  # Migrations on upgrade run before readiness: give startup room.
+  startupFailureThreshold: 60
+
+webhook:
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: 200m
+      memory: 384Mi
+    limits:
+      memory: 768Mi
+  podDisruptionBudget:
+    minAvailable: 1
+  preStopSleepSeconds: 10
+
+worker:
+  # Jobs one worker runs in parallel (`n8n worker --concurrency`). n8n warns
+  # below 5.
+  concurrency: 10
+  # Kept short on purpose: n8n keeps pulling jobs until SIGTERM, so a long
+  # preStop only adds work to drain. The real protection is n8n's own drain
+  # (pause the local queue, wait for running jobs) within the window below.
+  preStopSleepSeconds: 5
+  # Seconds added on top of maxExecutionSeconds for n8n's own shutdown
+  # (closing DB/Redis) before the kubelet sends SIGKILL.
+  shutdownBufferSeconds: 30
+  resources:
+    requests:
+      cpu: 500m
+      memory: 768Mi
+    limits:
+      memory: 1536Mi
+
+keda:
+  enabled: true
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  pollingInterval: 15
+  # Seconds with no waiting and no active jobs before KEDA scales to zero.
+  cooldownPeriod: 300
+  # Target waiting jobs per worker replica: HPA sizes to ceil(wait / listLength).
+  listLength: 10
+  # KEDA wakes the workers from 0 when the wait list is longer than this.
+  activationListLength: 0
+  # Second trigger on bull:jobs:active, target = worker concurrency. Jobs leave
+  # the wait list the moment a worker picks them up, so without it a long
+  # run would look like an idle queue and be scaled in.
+  activeListTrigger: true
+  scaleDown:
+    stabilizationWindowSeconds: 300
+    percentPerPeriod: 50
+    periodSeconds: 60
+  scaleUp:
+    stabilizationWindowSeconds: 0
+    podsPerPeriod: 4
+    periodSeconds: 15
+
+ingress:
+  enabled: true
+  host: n8n.example.com
+  certificateArn: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+  scheme: internet-facing
+  sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+  # Must exceed the longest synchronous webhook response.
+  idleTimeoutSeconds: 120
+  deregistrationDelaySeconds: 30
+  # Production webhooks, waiting (Wait node) webhooks, forms and MCP go to the
+  # webhook pods. /webhook-test/* stays on main: n8n registers test webhooks
+  # only on the main server (verified in the image).
+  webhookPaths:
+    # Prefix match is per path element, so /webhook never matches /webhook-test.
+    - /webhook
+    - /webhook-waiting
+    - /form
+    - /form-waiting
+    - /mcp
+
+networkPolicy:
+  enabled: true
+  # ALB target-type ip: traffic comes from the ALB's ENIs in the VPC.
+  vpcCidr: 10.0.0.0/16
+  # Where RDS and ElastiCache live (their subnets).
+  dataSubnetCidrs:
+    - 10.0.100.0/24
+    - 10.0.101.0/24
+    - 10.0.102.0/24
+  # Workflows call third-party APIs: HTTPS anywhere except the cluster's own
+  # VPC (data stores have their own rule) and the instance metadata service.
+  allowInternetHttps: true
+
+# Security groups for pods (VPC CNI branch ENIs). Off by default; prod turns
+# it on with the n8n pod SG from Terraform (output pod_security_group_id).
+securityGroupsForPods:
+  enabled: false
+  groupIds: []

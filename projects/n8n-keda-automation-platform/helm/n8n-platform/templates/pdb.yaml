@@ -1,0 +1,29 @@
+# main is a singleton: maxUnavailable 0 (values-prod.yaml) blocks voluntary
+# eviction, so a node drain waits for a planned restart instead of dropping
+# the UI and schedules at a random moment (docs/operations.md). Workers get no
+# PDB: KEDA scales them to zero, and their drain is the grace period.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "n8n.fullname" . }}-main
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: {{ .Values.main.podDisruptionBudget.maxUnavailable }}
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      {{- include "n8n.selectorLabels" (dict "root" . "component" "main") | nindent 6 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "n8n.fullname" . }}-webhook
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.webhook.podDisruptionBudget.minAvailable }}
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 6 }}

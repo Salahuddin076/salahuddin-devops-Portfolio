@@ -1,0 +1,23 @@
+# Synthetic n8n queue depth: LLEN bull:jobs:wait and bull:jobs:active, one row
+# per change (each row holds until the next). Burst, short gap, small burst,
+# long idle, second burst, idle. Not measured from any real system.
+t_seconds,wait,active
+0,0,0
+60,40,0
+75,120,10
+90,150,40
+120,110,80
+150,60,90
+180,20,70
+210,0,40
+240,0,10
+270,0,0
+360,15,0
+375,0,5
+390,0,0
+1200,60,0
+1215,45,20
+1230,30,30
+1260,0,20
+1290,0,0
+1800,0,0

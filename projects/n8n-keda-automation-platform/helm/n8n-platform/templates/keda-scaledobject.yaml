@@ -1,0 +1,68 @@
+{{- if .Values.keda.enabled }}
+# Workers scale on queue depth, not CPU. KEDA activates the Deployment from 0
+# to 1 when bull:jobs:wait is longer than activationListLength; above 1 its
+# HPA sizes it to ceil(LLEN / listLength). With nothing waiting or running
+# for cooldownPeriod, KEDA scales it back to 0. scripts/keda_scaling_sim.py
+# models exactly these settings.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "n8n.fullname" . }}-worker
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+    {{- include "n8n.selectorLabels" (dict "root" . "component" "worker") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "n8n.fullname" . }}-worker
+  minReplicaCount: {{ .Values.keda.minReplicaCount }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
+  pollingInterval: {{ .Values.keda.pollingInterval }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod }}
+  advanced:
+    horizontalPodAutoscalerConfig:
+      name: {{ include "n8n.fullname" . }}-worker
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: {{ .Values.keda.scaleUp.stabilizationWindowSeconds }}
+          policies:
+            - type: Pods
+              value: {{ .Values.keda.scaleUp.podsPerPeriod }}
+              periodSeconds: {{ .Values.keda.scaleUp.periodSeconds }}
+        # Short gaps between bursts must not scale workers in: the HPA uses the
+        # highest recommendation of the last window.
+        scaleDown:
+          stabilizationWindowSeconds: {{ .Values.keda.scaleDown.stabilizationWindowSeconds }}
+          policies:
+            - type: Percent
+              value: {{ .Values.keda.scaleDown.percentPerPeriod }}
+              periodSeconds: {{ .Values.keda.scaleDown.periodSeconds }}
+  triggers:
+    - type: redis
+      name: bull-wait
+      metadata:
+        address: {{ printf "%s:%v" .Values.redis.host .Values.redis.port | quote }}
+        databaseIndex: {{ .Values.redis.db | quote }}
+        enableTLS: {{ .Values.redis.tls | quote }}
+        listName: {{ include "n8n.bullKey" (dict "root" . "type" "wait") | quote }}
+        listLength: {{ .Values.keda.listLength | quote }}
+        activationListLength: {{ .Values.keda.activationListLength | quote }}
+      authenticationRef:
+        name: {{ include "n8n.fullname" . }}-redis
+    {{- if .Values.keda.activeListTrigger }}
+    # Jobs a worker has picked up sit in bull:jobs:active. Target = concurrency,
+    # so running jobs hold their workers; the HPA takes the larger of the two.
+    - type: redis
+      name: bull-active
+      metadata:
+        address: {{ printf "%s:%v" .Values.redis.host .Values.redis.port | quote }}
+        databaseIndex: {{ .Values.redis.db | quote }}
+        enableTLS: {{ .Values.redis.tls | quote }}
+        listName: {{ include "n8n.bullKey" (dict "root" . "type" "active") | quote }}
+        listLength: {{ .Values.worker.concurrency | quote }}
+        activationListLength: "0"
+      authenticationRef:
+        name: {{ include "n8n.fullname" . }}-redis
+    {{- end }}
+{{- end }}

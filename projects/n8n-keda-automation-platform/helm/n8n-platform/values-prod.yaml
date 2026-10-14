@@ -1,0 +1,69 @@
+# Production overlay. Helm always starts from the chart's values.yaml, so
+# `-f values-prod.yaml` only overrides what is set here. Synthetic names.
+
+publicUrl: https://automation.example.com/
+
+database:
+  host: n8n-prod.placeholder.us-east-1.rds.amazonaws.com
+  poolSize: 6
+
+redis:
+  host: master.n8n-prod-queue.placeholder.use1.cache.amazonaws.com
+
+executions:
+  # Longest workflow in the synthetic catalog is a 20-minute batch export.
+  maxExecutionSeconds: 1200
+  pruneMaxAgeHours: 336
+  pruneMaxCount: 200000
+
+main:
+  # Drains wait for a planned restart of the singleton (docs/operations.md).
+  podDisruptionBudget:
+    maxUnavailable: 0
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+
+webhook:
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 12
+
+worker:
+  concurrency: 10
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1536Mi
+    limits:
+      memory: 3Gi
+
+keda:
+  maxReplicaCount: 30
+  pollingInterval: 10
+  cooldownPeriod: 600
+  listLength: 10
+  activationListLength: 0
+  scaleDown:
+    stabilizationWindowSeconds: 600
+    percentPerPeriod: 25
+    periodSeconds: 60
+
+ingress:
+  host: automation.example.com
+  idleTimeoutSeconds: 300
+
+networkPolicy:
+  vpcCidr: 10.20.0.0/16
+  dataSubnetCidrs:
+    - 10.20.100.0/24
+    - 10.20.101.0/24
+    - 10.20.102.0/24
+
+securityGroupsForPods:
+  enabled: true
+  groupIds:
+    - sg-0123456789abcdef0

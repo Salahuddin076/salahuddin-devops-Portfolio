@@ -1,0 +1,16 @@
+apiVersion: v2
+name: n8n-platform
+description: Self-hosted n8n in queue mode on EKS. One main, HPA-scaled webhook processes, and workers that KEDA scales to zero on the Bull wait list in Redis. Secrets come from Secrets Manager through the Secrets Store CSI driver.
+type: application
+version: 0.1.0
+appVersion: "2.41.3"
+kubeVersion: ">=1.30.0-0"
+keywords:
+  - n8n
+  - keda
+  - queue-mode
+  - eks
+  - secrets-store-csi-driver
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

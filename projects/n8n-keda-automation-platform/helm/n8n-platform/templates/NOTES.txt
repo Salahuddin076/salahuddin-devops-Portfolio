@@ -1,0 +1,9 @@
+n8n {{ .Values.image.tag }} in queue mode, namespace {{ .Release.Namespace }}.
+
+  main     1 replica (fixed)        {{ include "n8n.fullname" . }}-main
+  webhook  HPA {{ .Values.webhook.autoscaling.minReplicas }}-{{ .Values.webhook.autoscaling.maxReplicas }} on CPU          {{ include "n8n.fullname" . }}-webhook
+  worker   KEDA {{ .Values.keda.minReplicaCount }}-{{ .Values.keda.maxReplicaCount }} on {{ include "n8n.bullKey" (dict "root" . "type" "wait") }}   {{ include "n8n.fullname" . }}-worker
+
+Check the scaler:
+  kubectl -n {{ .Release.Namespace }} get scaledobject {{ include "n8n.fullname" . }}-worker
+  kubectl -n {{ .Release.Namespace }} describe triggerauthentication {{ include "n8n.fullname" . }}-redis

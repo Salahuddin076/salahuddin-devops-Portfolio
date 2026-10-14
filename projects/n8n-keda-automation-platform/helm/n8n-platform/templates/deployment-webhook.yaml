@@ -1,0 +1,66 @@
+# webhook: `n8n webhook` receives production webhook calls and enqueues a job
+# per execution in Redis. Stateless, so the HPA scales it on CPU.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "n8n.fullname" . }}-webhook
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+    {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 4 }}
+spec:
+  # No replicas field: the HPA owns the count (a helm upgrade won't reset it).
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "n8n.podLabels" . | nindent 8 }}
+        {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 8 }}
+      annotations:
+        checksum/secretproviderclass: {{ include "n8n.spcSpec" . | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        {{- include "n8n.podSecurityContext" . | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "n8n.selectorLabels" (dict "root" . "component" "webhook") | nindent 14 }}
+      containers:
+        - name: n8n
+          image: {{ include "n8n.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["webhook"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+            {{- include "n8n.sharedEnv" . | nindent 12 }}
+          lifecycle:
+            # Keep serving while the ALB deregisters the target.
+            preStop:
+              sleep:
+                seconds: {{ .Values.webhook.preStopSleepSeconds }}
+          {{- include "n8n.probes" (dict) | nindent 10 }}
+          resources:
+            {{- toYaml .Values.webhook.resources | nindent 12 }}
+          securityContext:
+            {{- include "n8n.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            {{- include "n8n.writableMounts" . | nindent 12 }}
+      volumes:
+        {{- include "n8n.volumes" . | nindent 8 }}

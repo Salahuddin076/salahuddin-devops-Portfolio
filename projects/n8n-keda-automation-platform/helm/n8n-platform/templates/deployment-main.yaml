@@ -1,0 +1,60 @@
+# main: editor UI, REST API, schedules, pollers and trigger registration.
+# Exactly one replica (the schema enforces it) and a Recreate rollout, so two
+# mains never overlap: two would fire every schedule twice, and main is the
+# process that runs DB migrations on an upgrade.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "n8n.fullname" . }}-main
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+    {{- include "n8n.selectorLabels" (dict "root" . "component" "main") | nindent 4 }}
+spec:
+  replicas: {{ .Values.main.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "n8n.selectorLabels" (dict "root" . "component" "main") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "n8n.podLabels" . | nindent 8 }}
+        {{- include "n8n.selectorLabels" (dict "root" . "component" "main") | nindent 8 }}
+      annotations:
+        checksum/secretproviderclass: {{ include "n8n.spcSpec" . | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        {{- include "n8n.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: n8n
+          image: {{ include "n8n.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["start"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+            {{- include "n8n.sharedEnv" . | nindent 12 }}
+            # Production webhooks are served by the webhook Deployment only.
+            - name: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
+              value: "true"
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ .Values.main.preStopSleepSeconds }}
+          {{- include "n8n.probes" (dict "startupFailureThreshold" .Values.main.startupFailureThreshold) | nindent 10 }}
+          resources:
+            {{- toYaml .Values.main.resources | nindent 12 }}
+          securityContext:
+            {{- include "n8n.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            {{- include "n8n.writableMounts" . | nindent 12 }}
+      volumes:
+        {{- include "n8n.volumes" . | nindent 8 }}

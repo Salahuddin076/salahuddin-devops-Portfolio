@@ -1,0 +1,75 @@
+# Minimal compliant n8n queue-mode manifests (synthetic).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-main
+  namespace: n8n
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+        - name: n8n
+          image: docker.n8n.io/n8nio/n8n:2.41.3
+          args: ["start"]
+          env:
+            - name: EXECUTIONS_MODE
+              value: "queue"
+            - name: N8N_ENCRYPTION_KEY_FILE
+              value: "/mnt/secrets/encryption-key"
+            - name: DB_POSTGRESDB_PASSWORD_FILE
+              value: "/mnt/secrets/db-password"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-worker
+  namespace: n8n
+  annotations:
+    n8n.example.com/max-execution-seconds: "600"
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 650
+      containers:
+        - name: n8n
+          image: docker.n8n.io/n8nio/n8n:2.41.3
+          args: ["worker", "--concurrency=10"]
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          env:
+            - name: EXECUTIONS_MODE
+              value: "queue"
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-encryption
+                  key: key
+            - name: EXECUTIONS_TIMEOUT
+              value: "600"
+            - name: N8N_GRACEFUL_SHUTDOWN_TIMEOUT
+              value: "630"
+            - name: QUEUE_HEALTH_CHECK_ACTIVE
+              value: "true"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: n8n-worker
+  namespace: n8n
+spec:
+  scaleTargetRef:
+    name: n8n-worker
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  cooldownPeriod: 300
+  triggers:
+    - type: redis
+      name: bull-wait
+      metadata:
+        listName: "bull:jobs:wait"
+        listLength: "10"

@@ -1,0 +1,46 @@
+{{- if .Values.ingress.enabled }}
+# One ALB (AWS Load Balancer Controller, target-type ip). Rules are evaluated
+# in order: production webhook paths to the webhook pods first, everything
+# else (editor, REST API, push, /webhook-test) to main. Test webhooks are
+# registered only on the main server in n8n, so they must not go to the
+# webhook pods.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "n8n.fullname" . }}
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+  annotations:
+    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.scheme }}
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: {{ required "ingress.certificateArn is required" .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/ssl-policy: {{ .Values.ingress.sslPolicy }}
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz/readiness
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds={{ .Values.ingress.deregistrationDelaySeconds }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds={{ .Values.ingress.idleTimeoutSeconds }},routing.http.drop_invalid_header_fields.enabled=true
+spec:
+  ingressClassName: alb
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- range .Values.ingress.webhookPaths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "n8n.fullname" $ }}-webhook
+                port:
+                  name: http
+          {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "n8n.fullname" . }}-main
+                port:
+                  name: http
+{{- end }}

@@ -1,0 +1,6 @@
+region                 = "us-east-1"
+environment            = "prod"
+cluster_name           = "platform-prod"
+vpc_id                 = "vpc-0123456789abcdef0"
+data_subnet_ids        = ["subnet-0aaaaaaaaaaaaaaa1", "subnet-0bbbbbbbbbbbbbbb2", "subnet-0ccccccccccccccc3"]
+node_security_group_id = "sg-0fedcba9876543210"

@@ -1,0 +1,23 @@
+{{- if .Values.keda.enabled }}
+# KEDA's operator reads the Redis AUTH token straight from Secrets Manager as
+# its *own* identity (EKS Pod Identity on the keda-operator ServiceAccount,
+# a role scoped to this one secret in Terraform). No Kubernetes Secret
+# exists, so scaling from zero never depends on a CSI-synced Secret that
+# only lives while some pod mounts the volume (ADR 0003).
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ include "n8n.fullname" . }}-redis
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  awsSecretManager:
+    podIdentity:
+      provider: aws
+      identityOwner: keda
+    region: {{ .Values.aws.region | quote }}
+    secrets:
+      - parameter: password
+        name: {{ .Values.secrets.redisAuth.secretName | quote }}
+        versionStage: AWSCURRENT
+{{- end }}
