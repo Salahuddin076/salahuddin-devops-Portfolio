@@ -1,0 +1,43 @@
+{
+  "environment": "dev",
+  "host_header": "dev.api.example.com",
+  "test_listener_port": 8443,
+  "test_listener_cidrs": [
+    "203.0.113.0/24"
+  ],
+  "deployment_config_name": "CodeDeployDefault.ECSAllAtOnce",
+  "manual_reroute": false,
+  "reroute_wait_minutes": 0,
+  "termination_wait_minutes": "5",
+  "auto_rollback": {
+    "enabled": true,
+    "events": [
+      "DEPLOYMENT_FAILURE",
+      "DEPLOYMENT_STOP_ON_ALARM"
+    ]
+  },
+  "task": {
+    "cpu": 256,
+    "memory": 512,
+    "cpu_architecture": "ARM64",
+    "log_retention_days": 7
+  },
+  "capacity": {
+    "on_demand_base": 0,
+    "on_demand_weight": 0,
+    "spot_weight": 1
+  },
+  "scaling": {
+    "desired_count": 1,
+    "min_capacity": 1,
+    "max_capacity": 2,
+    "cpu_target_percent": 70,
+    "requests_per_target": 500
+  },
+  "deregistration_delay_seconds": 15,
+  "smoke": {
+    "requests": 10,
+    "p95_budget_ms": 800,
+    "request_timeout_seconds": 5
+  }
+}

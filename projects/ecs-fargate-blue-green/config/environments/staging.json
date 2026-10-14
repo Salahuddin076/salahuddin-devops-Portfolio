@@ -1,0 +1,44 @@
+{
+  "environment": "staging",
+  "host_header": "staging.api.example.com",
+  "test_listener_port": 8443,
+  "test_listener_cidrs": ["203.0.113.0/24"],
+  "deployment_config_name": "CodeDeployDefault.ECSLinear10PercentEvery1Minutes",
+  "manual_reroute": false,
+  "reroute_wait_minutes": 0,
+  "termination_wait_minutes": 15,
+  "auto_rollback": {
+    "enabled": true,
+    "events": ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
+  },
+  "alarms": {
+    "enabled": true,
+    "target_5xx_threshold": 5,
+    "p95_latency_threshold_seconds": 0.5,
+    "evaluation_periods": 2
+  },
+  "task": {
+    "cpu": 512,
+    "memory": 1024,
+    "cpu_architecture": "ARM64",
+    "log_retention_days": 14
+  },
+  "capacity": {
+    "on_demand_base": 1,
+    "on_demand_weight": 1,
+    "spot_weight": 1
+  },
+  "scaling": {
+    "desired_count": 2,
+    "min_capacity": 2,
+    "max_capacity": 4,
+    "cpu_target_percent": 60,
+    "requests_per_target": 400
+  },
+  "deregistration_delay_seconds": 30,
+  "smoke": {
+    "requests": 20,
+    "p95_budget_ms": 500,
+    "request_timeout_seconds": 5
+  }
+}

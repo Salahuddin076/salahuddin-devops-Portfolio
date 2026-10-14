@@ -1,0 +1,19 @@
+# CodeDeploy AppSpec for an Amazon ECS blue/green deployment.
+# Rendered by scripts/render_appspec.py; every placeholder must be filled.
+# The task definition ARN is a registered revision (immutable image tag).
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "${TASK_DEFINITION_ARN}"
+        LoadBalancerInfo:
+          ContainerName: "${CONTAINER_NAME}"
+          ContainerPort: ${CONTAINER_PORT}
+        PlatformVersion: "${PLATFORM_VERSION}"
+Hooks:
+  # Runs after the replacement task set is behind the test listener and
+  # before any production traffic moves: smoke tests against the test URL.
+  - BeforeAllowTraffic: "${BEFORE_ALLOW_TRAFFIC_HOOK_ARN}"
+  # Runs once 100% of production traffic is on the replacement task set.
+  - AfterAllowTraffic: "${AFTER_ALLOW_TRAFFIC_HOOK_ARN}"

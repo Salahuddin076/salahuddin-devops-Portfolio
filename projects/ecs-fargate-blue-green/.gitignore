@@ -1,0 +1,19 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Rendered release artifacts and the hooks zip
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local secret files used with put-secret-value
+*-db.json
