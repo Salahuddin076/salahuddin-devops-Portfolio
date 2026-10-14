@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars (git-ignored). Placeholders only.
+region       = "us-east-1"
+environment  = "dev"
+cluster_name = "example-eks"
+# rotation_lambda_arn = "arn:aws:lambda:us-east-1:123456789012:function:example-postgres-rotation"

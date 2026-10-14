@@ -1,0 +1,86 @@
+# secure-frontend: zero hard-coded secrets. Every value below is safe to
+# commit: secret *names* and mount paths, never secret values.
+
+image:
+  repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/secure-frontend
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+# Must match the Pod Identity association in Terraform
+# (var.namespace / var.service_account, default secure-frontend/secure-frontend).
+serviceAccount:
+  create: true
+  name: secure-frontend
+
+aws:
+  region: us-east-1
+  # ASCP authenticates as this pod's ServiceAccount through EKS Pod Identity.
+  # false means IRSA (the SA then needs the eks.amazonaws.com/role-arn annotation; see ADR 0002).
+  usePodIdentity: true
+
+secrets:
+  # Where the CSI volume is mounted; the app reads files from here (SECRETS_DIR).
+  mountPath: /mnt/secrets
+  # How often the app checks the files for a rotated version (SECRETS_POLL_SECONDS).
+  # Worst-case pickup = the driver's rotationPollInterval + this.
+  appPollSeconds: 10
+  db:
+    # Secrets Manager secret holding JSON {"username": ..., "password": ..., "host": ...}.
+    secretName: secure-frontend/db-credentials
+    # The whole JSON document is also written, under this file name.
+    alias: db-credentials
+    # jmesPath key in the JSON -> file name under mountPath.
+    keys:
+      username: db-username
+      password: db-password
+      host: db-host
+  apiKey:
+    secretName: secure-frontend/api-key
+    alias: api-key
+  # Optional: also copy the mounted values into a Kubernetes Secret (secretObjects).
+  # Off by default, and the Deployment never reads it. A synced Secret lives in
+  # etcd (encrypted with the cluster's KMS key, but readable by anyone with
+  # `get secrets` in the namespace), outlives the pod only while some pod mounts
+  # the volume, and is needed only to feed env vars to software that can't read
+  # files. Turning this on also requires syncSecret.enabled on the driver
+  # (Terraform var.sync_secret_enabled).
+  sync:
+    enabled: false
+    secretName: secure-frontend-synced
+
+containerPort: 8080
+
+service:
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+probes:
+  # Startup waits for the CSI mount and the first successful read.
+  startup:
+    periodSeconds: 2
+    failureThreshold: 30
+  readiness:
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 10
+    failureThreshold: 3
+
+podDisruptionBudget:
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Namespace of the ingress controller / ALB-facing proxy allowed to reach the pods.
+  ingressNamespace: ingress
+  # The app never calls AWS: ASCP (a DaemonSet in kube-system) fetches the
+  # secrets. So egress is cluster DNS only, plus whatever backends you list.
+  extraEgress: []

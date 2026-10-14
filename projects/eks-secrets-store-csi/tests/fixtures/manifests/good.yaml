@@ -1,0 +1,72 @@
+# Passes every scan_manifests.py rule: secrets arrive as read-only files,
+# env vars only say where they are, no kube-API token is mounted.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web
+  namespace: web
+automountServiceAccountToken: false
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: web
+  namespace: web
+spec:
+  provider: aws
+  parameters:
+    usePodIdentity: "true"
+    objects: |
+      - objectName: "web/db-credentials"
+        objectType: "secretsmanager"
+        jmesPath:
+          - path: "password"
+            objectAlias: "db-password"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      serviceAccountName: web
+      automountServiceAccountToken: false
+      containers:
+        - name: web
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/web:1.0.0
+          env:
+            - name: SECRETS_DIR
+              value: /mnt/secrets
+            - name: DB_PASSWORD_FILE
+              value: /mnt/secrets/db-password
+            - name: LOG_LEVEL
+              value: INFO
+            - name: FEATURE_FLAGS
+              value: "checkout-v2,dark-mode"
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: web
+---
+# A Secret with no literal data (the type is enough; Kubernetes fills it in).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-placeholder
+  namespace: web
+type: Opaque

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "serviceAccount", "aws", "secrets", "resources", "networkPolicy"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "tag": {"type": "string", "minLength": 1, "not": {"enum": ["latest"]}},
+        "pullPolicy": {"enum": ["IfNotPresent", "Always", "Never"]}
+      }
+    },
+    "replicaCount": {"type": "integer", "minimum": 2},
+    "serviceAccount": {
+      "type": "object",
+      "required": ["create", "name"],
+      "properties": {
+        "create": {"type": "boolean"},
+        "name": {"type": "string", "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", "maxLength": 63}
+      }
+    },
+    "aws": {
+      "type": "object",
+      "required": ["region", "usePodIdentity"],
+      "properties": {
+        "region": {"type": "string", "pattern": "^[a-z]{2}(-gov)?-[a-z]+-[0-9]$"},
+        "usePodIdentity": {"type": "boolean"}
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "required": ["mountPath", "appPollSeconds", "db", "apiKey", "sync"],
+      "properties": {
+        "mountPath": {"type": "string", "pattern": "^/[a-z0-9/_-]+$"},
+        "appPollSeconds": {"type": "integer", "minimum": 1, "maximum": 300},
+        "db": {
+          "type": "object",
+          "required": ["secretName", "alias", "keys"],
+          "properties": {
+            "secretName": {"type": "string", "minLength": 1},
+            "alias": {"$ref": "#/definitions/fileName"},
+            "keys": {
+              "type": "object",
+              "required": ["username", "password", "host"],
+              "additionalProperties": {"$ref": "#/definitions/fileName"}
+            }
+          }
+        },
+        "apiKey": {
+          "type": "object",
+          "required": ["secretName", "alias"],
+          "properties": {
+            "secretName": {"type": "string", "minLength": 1},
+            "alias": {"$ref": "#/definitions/fileName"}
+          }
+        },
+        "sync": {
+          "type": "object",
+          "required": ["enabled", "secretName"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "secretName": {"type": "string", "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": {"type": "object", "required": ["cpu", "memory"]},
+        "limits": {"type": "object", "required": ["memory"]}
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "required": ["enabled", "ingressNamespace"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "ingressNamespace": {"type": "string"},
+        "extraEgress": {"type": "array"}
+      }
+    }
+  },
+  "definitions": {
+    "fileName": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$"}
+  }
+}

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "secure-frontend.fullname" . }}
+  labels:
+    {{- include "secure-frontend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "secure-frontend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "secure-frontend.labels" . | nindent 8 }}
+      annotations:
+        # Rolls the pods when the secret *mapping* changes (mount-time config).
+        # Rotated *values* don't change this: the driver rewrites the files and
+        # the app re-reads them (SECRETS_POLL_SECONDS), no restart.
+        checksum/secretproviderclass: {{ include "secure-frontend.spcSpec" . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "secure-frontend.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        {{- include "secure-frontend.podSecurityContext" . | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "secure-frontend.selectorLabels" . | nindent 14 }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          # Configuration only: where the files are and which ones must exist.
+          # No secret value is ever passed as an env var (scan_manifests.py SM001/SM002).
+          env:
+            - name: SECRETS_DIR
+              value: {{ .Values.secrets.mountPath | quote }}
+            - name: SECRETS_REQUIRED
+              value: {{ include "secure-frontend.requiredFiles" . | quote }}
+            - name: SECRETS_POLL_SECONDS
+              value: {{ .Values.secrets.appPollSeconds | quote }}
+            - name: PORT
+              value: {{ .Values.containerPort | quote }}
+          volumeMounts:
+            - name: secrets-store
+              mountPath: {{ .Values.secrets.mountPath }}
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- include "secure-frontend.containerSecurityContext" . | nindent 12 }}
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "secure-frontend.fullname" . }}
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi

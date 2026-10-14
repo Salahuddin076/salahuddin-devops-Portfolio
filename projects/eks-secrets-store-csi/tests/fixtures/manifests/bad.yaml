@@ -1,0 +1,79 @@
+# Every object here breaks at least one scan_manifests.py rule. The values are
+# synthetic (the AWS documentation's example key ID, made-up passwords).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: legacy
+  namespace: web
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: web
+type: Opaque
+stringData:
+  password: hunter2-but-longer
+data:
+  username: YXBwX3VzZXI=
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: legacy
+  namespace: web
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "web/db-credentials"
+        objectType: "secretsmanager"
+  secretObjects:
+    - secretName: legacy-env
+      type: Opaque
+      data:
+        - objectName: web/db-credentials
+          key: credentials
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: legacy
+  namespace: web
+spec:
+  selector:
+    matchLabels:
+      app: legacy
+  template:
+    metadata:
+      labels:
+        app: legacy
+    spec:
+      serviceAccountName: legacy
+      containers:
+        - name: web
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/legacy:1.0.0
+          env:
+            - name: DB_PASSWORD
+              value: "SuperSecret-Example-1"
+            - name: UPLOADER_IDENTITY
+              value: AKIAIOSFODNN7EXAMPLE
+            - name: UPSTREAM_SIGNATURE
+              value: "q8Zr4LmP2vXw9TbK7nYc3HdF6sJa1GeU"
+            - name: STRIPE_KEY_REF
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+          envFrom:
+            - secretRef:
+                name: legacy-env
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            volumeAttributes:
+              secretProviderClass: legacy

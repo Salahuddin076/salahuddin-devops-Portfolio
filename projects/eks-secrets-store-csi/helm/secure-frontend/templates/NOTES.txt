@@ -1,0 +1,11 @@
+secure-frontend {{ .Chart.AppVersion }} reads its secrets from {{ .Values.secrets.mountPath }} (CSI volume, read-only).
+
+Check the mount and the app's view (no values are printed):
+  kubectl -n {{ .Release.Namespace }} get secretproviderclasspodstatuses
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "secure-frontend.fullname" . }} 8080:{{ .Values.service.port }}
+  curl -s localhost:8080/healthz
+
+ServiceAccount {{ include "secure-frontend.serviceAccountName" . }} must match the Terraform Pod Identity association.
+{{- if .Values.secrets.sync.enabled }}
+secretObjects is ON: values are also copied to Secret {{ .Values.secrets.sync.secretName }} in etcd.
+{{- end }}
