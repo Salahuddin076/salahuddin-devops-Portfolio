@@ -1,0 +1,30 @@
+HTTP/2 301
+content-length: 0
+location: https://www.example.com/docs/
+cache-control: public, max-age=3600
+server: CloudFront
+x-cache: FunctionGeneratedResponse from cloudfront
+via: 1.1 0123456789abcdef0123456789abcdef.cloudfront.net (CloudFront)
+x-amz-cf-pop: FRA56-P1
+x-amz-cf-id: EXAMPLEaBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789example==
+
+HTTP/2 200
+content-type: text/html; charset=utf-8
+content-length: 1342
+date: Wed, 14 Oct 2026 09:12:41 GMT
+last-modified: Wed, 14 Oct 2026 08:55:03 GMT
+etag: "6f1ed002ab5595859014ebf0951522d9"
+cache-control: no-cache
+accept-ranges: bytes
+server: AmazonS3
+strict-transport-security: max-age=63072000; includeSubDomains
+content-security-policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=()
+x-cache: Miss from cloudfront
+via: 1.1 0123456789abcdef0123456789abcdef.cloudfront.net (CloudFront)
+x-amz-cf-pop: FRA56-P1
+alt-svc: h3=":443"; ma=86400
+x-amz-cf-id: EXAMPLEzYxWvUtSrQpOnMlKjIhGfEdCbA9876543210example==

@@ -1,0 +1,62 @@
+{
+  "Contents": [
+    {
+      "Key": "404.html",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"fbdb8fb16ec91391567003c790a2160d\"",
+      "Size": 712,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "assets/app.0b1c2d3e4f.js",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"cc89609390789559776c2d11feaf23d3\"",
+      "Size": 2048,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "assets/site.1a2b3c4d.css",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"9dee5fcb14c9cdb46722ca224577b7aa\"",
+      "Size": 1024,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "docs/index.html",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"1449980d9a5f6f80c4f7ee23700e373c\"",
+      "Size": 1100,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "favicon.svg",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"607afb43c498f3bb81aaa5eca17be8d7\"",
+      "Size": 120,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "index.html",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"18a1794903c99326bcaced13d60ca61c\"",
+      "Size": 690,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "pricing/index.html",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"16a3897e4395c6b9c73ac1ee6c2a4d1b\"",
+      "Size": 840,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "robots.txt",
+      "LastModified": "2026-09-30T16:20:11+00:00",
+      "ETag": "\"bfe1820efd07face9bd720de1195a2de\"",
+      "Size": 24,
+      "StorageClass": "STANDARD"
+    }
+  ],
+  "RequestCharged": null,
+  "Prefix": ""
+}

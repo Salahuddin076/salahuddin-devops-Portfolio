@@ -1,0 +1,48 @@
+/* Demo stylesheet. Served from the same origin, so the CSP's style-src 'self' allows it. */
+:root {
+  color-scheme: light dark;
+  --fg: #1d2330;
+  --bg: #fbfbfd;
+  --accent: #3a5bd9;
+  --banner-bg: #fff4d6;
+  --banner-fg: #5a4300;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e8ee;
+    --bg: #12151c;
+    --accent: #8ea6ff;
+    --banner-bg: #3a2f10;
+    --banner-fg: #ffe7a3;
+  }
+}
+
+body {
+  margin: 0;
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.banner {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--banner-fg);
+  background: var(--banner-bg);
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  font-size: 0.9em;
+}

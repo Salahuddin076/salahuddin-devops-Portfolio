@@ -1,0 +1,138 @@
+name: cloudfront-s3-static-delivery
+
+on:
+  push:
+    paths:
+      - "projects/cloudfront-s3-static-delivery/**"
+      - ".github/workflows/cloudfront-s3-static-delivery.yml"
+  pull_request:
+    paths:
+      - "projects/cloudfront-s3-static-delivery/**"
+      - ".github/workflows/cloudfront-s3-static-delivery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudfront-s3-static-delivery-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/cloudfront-s3-static-delivery
+
+jobs:
+  unittest:
+    name: Python unit tests (+ CloudFront Function under node)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # node runs the CloudFront Function's handler against the Python spec
+      # (tests/test_cloudfront_function.py). Without it that test skips.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+      - name: Deploy plan on the sample build
+        run: python scripts/deploy_plan.py sample-data/build --manifest sample-data/remote-manifest.json
+      - name: Header check (good sample must pass, bad sample must fail)
+        run: |
+          python scripts/check_headers.py sample-data/headers-good.txt
+          set +e
+          python scripts/check_headers.py sample-data/headers-bad.txt
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 on headers-bad.txt, got $code"
+            exit 1
+          fi
+
+  terraform:
+    name: Terraform fmt + validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dir:
+          - terraform/modules/static-site/validation-harness
+          - terraform/modules/github-oidc-deployer
+          - terraform/examples/basic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: terraform init (no backend) + validate
+        run: |
+          terraform -chdir="${{ matrix.dir }}" init -backend=false -input=false
+          terraform -chdir="${{ matrix.dir }}" validate
+
+  # TEMPLATE ONLY: this job never runs (`if: false`). It shows the GitHub
+  # OIDC deploy flow against the role from terraform/modules/github-oidc-deployer.
+  # A reviewer can enable it once the stack is applied and the repository
+  # variables STATIC_SITE_DEPLOY_ROLE_ARN, STATIC_SITE_BUCKET and
+  # STATIC_SITE_DISTRIBUTION_ID exist, by removing the `if: false` line.
+  # No AWS keys are stored anywhere: the role ARN is a variable, not a secret.
+  deploy-example:
+    name: Deploy (OIDC template, disabled)
+    if: false
+    needs: [unittest, terraform]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The token's sub becomes repo:<org>/<repo>:environment:production, which
+    # is what the example's trust policy allows (github_environments).
+    environment: production
+    # The only job that may request an OIDC token.
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      BUCKET: ${{ vars.STATIC_SITE_BUCKET }}
+      DISTRIBUTION_ID: ${{ vars.STATIC_SITE_DISTRIBUTION_ID }}
+      BUILD_DIR: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Assume the deploy role with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.STATIC_SITE_DEPLOY_ROLE_ARN }}
+          role-session-name: static-site-${{ github.run_id }}
+          aws-region: us-east-1
+      - name: Plan (diff the build against the bucket)
+        run: |
+          aws s3api list-objects-v2 --bucket "$BUCKET" --output json > remote.json
+          python scripts/deploy_plan.py "$BUILD_DIR" --manifest remote.json --keep-old-hashed > plan.json
+          jq '.summary, .invalidation' plan.json
+      - name: Upload (hashed assets, then other files, then HTML)
+        run: |
+          jq -c '.upload[]' plan.json | while read -r item; do
+            key=$(jq -r '.key' <<<"$item")
+            aws s3 cp "$BUILD_DIR/$key" "s3://$BUCKET/$key" \
+              --cache-control "$(jq -r '.cache_control' <<<"$item")" \
+              --content-type "$(jq -r '.content_type' <<<"$item")" \
+              --only-show-errors
+          done
+      - name: Delete objects that left the build
+        run: |
+          jq -r '.delete[]' plan.json | while read -r key; do
+            aws s3 rm "s3://$BUCKET/$key" --only-show-errors
+          done
+      - name: Invalidate changed paths
+        run: |
+          if [ "$(jq '.invalidation.paths | length' plan.json)" -gt 0 ]; then
+            jq -r '.invalidation.paths[]' plan.json | xargs -d '\n' \
+              aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths
+          else
+            echo "Nothing to invalidate."
+          fi

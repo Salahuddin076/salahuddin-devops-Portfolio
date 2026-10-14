@@ -1,0 +1,12 @@
+# Documentation-safe values only: replace with real ones in a private tfvars.
+region              = "eu-west-1"
+owner               = "web-platform"
+name_prefix         = "static-demo"
+domain_names        = ["example.com", "www.example.com"]
+hosted_zone_id      = "Z0123456789EXAMPLE0AB"
+price_class         = "PriceClass_100"
+github_repository   = "example-org/example-site"
+github_environments = ["production"]
+
+# web_acl_arn = "arn:aws:wafv2:us-east-1:123456789012:global/webacl/edge-demo/a1b2c3d4-5678-90ab-cdef-0123456789ab"
+# existing_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"

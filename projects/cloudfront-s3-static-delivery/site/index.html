@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Static delivery demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <p class="banner">Demo site for the cloudfront-s3-static-delivery portfolio project. Synthetic content, not a real service.</p>
+  <main>
+    <h1>Static delivery demo</h1>
+    <p>This page is served from a private S3 bucket through CloudFront with Origin Access Control.</p>
+    <ul>
+      <li><a href="/docs/">Docs</a> (a directory URL, rewritten to <code>/docs/index.html</code> at the edge)</li>
+      <li><a href="/docs">Docs without the slash</a> (301 redirect to <code>/docs/</code>)</li>
+      <li><a href="/missing-page/">A missing page</a> (the custom 404 page, with a real 404 status)</li>
+    </ul>
+  </main>
+</body>
+</html>
