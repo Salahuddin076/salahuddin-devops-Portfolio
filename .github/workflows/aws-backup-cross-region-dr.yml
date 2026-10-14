@@ -1,0 +1,102 @@
+name: aws-backup-cross-region-dr
+
+on:
+  push:
+    paths:
+      - "projects/aws-backup-cross-region-dr/**"
+      - ".github/workflows/aws-backup-cross-region-dr.yml"
+  pull_request:
+    paths:
+      - "projects/aws-backup-cross-region-dr/**"
+      - ".github/workflows/aws-backup-cross-region-dr.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-backup-cross-region-dr-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/aws-backup-cross-region-dr
+
+jobs:
+  python-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+
+  policy-check:
+    name: Backup policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: check_plan_policy.py on the policy Terraform reads
+        run: python scripts/check_plan_policy.py policy/backup-policy.json
+      - name: check_plan_policy.py must fail the non-compliant fixture
+        run: |
+          set +e
+          python scripts/check_plan_policy.py policy/fixtures/backup-policy-noncompliant.json
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 on the non-compliant fixture, got $code"
+            exit 1
+          fi
+
+  rpo-report:
+    name: RPO/RTO report on the synthetic job history
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The sample deliberately contains a gold resource that breaches its RPO,
+      # so the report must exit 1. Any other code (0, or 2 for bad input) fails.
+      - name: rpo_rto_report.py must exit 1 on the sample
+        run: |
+          set +e
+          mkdir -p reports
+          python scripts/rpo_rto_report.py sample-data/jobs.json -o reports/rpo-rto.md
+          code=$?
+          cat reports/rpo-rto.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 1 ]; then
+            echo "::error::expected exit 1 (gold RPO breach in the sample), got $code"
+            exit 1
+          fi
+
+  terraform:
+    name: Terraform fmt + validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dir:
+          - terraform/modules/backup-dr/validation-harness
+          - terraform/examples/basic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: terraform init
+        run: terraform -chdir="${{ matrix.dir }}" init -backend=false -input=false
+      - name: terraform validate
+        run: terraform -chdir="${{ matrix.dir }}" validate

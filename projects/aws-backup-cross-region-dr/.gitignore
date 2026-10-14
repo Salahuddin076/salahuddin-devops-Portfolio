@@ -1,0 +1,22 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+plan.json
+crash.log
+# Lambda zip built by archive_file
+.build/
+# .terraform.lock.hcl is intentionally committed
+
+# Reports
+reports/
+
+# Python
+__pycache__/
+*.pyc
+
+# Real job-history exports (contain account IDs and resource ARNs)
+jobs-*.json

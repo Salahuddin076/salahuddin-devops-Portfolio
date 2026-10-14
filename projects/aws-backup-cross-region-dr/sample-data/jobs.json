@@ -1,0 +1,427 @@
+{
+  "description": "Synthetic AWS Backup job history (shapes follow list-backup-jobs, list-copy-jobs and list-restore-jobs output). Account 123456789012 is the documentation placeholder.",
+  "as_of": "2026-10-14T06:00:00Z",
+  "primary_region": "us-east-1",
+  "dr_region": "us-west-2",
+  "resources": [
+    {
+      "name": "orders-db",
+      "type": "RDS",
+      "tier": "gold",
+      "arn": "arn:aws:rds:us-east-1:123456789012:db:orders-db"
+    },
+    {
+      "name": "sessions-table",
+      "type": "DynamoDB",
+      "tier": "gold",
+      "arn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions"
+    },
+    {
+      "name": "media-assets",
+      "type": "S3",
+      "tier": "gold",
+      "arn": "arn:aws:s3:::example-media-assets"
+    },
+    {
+      "name": "build-cache",
+      "type": "EBS",
+      "tier": "silver",
+      "arn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001"
+    },
+    {
+      "name": "reports-db",
+      "type": "RDS",
+      "tier": "silver",
+      "arn": "arn:aws:rds:us-east-1:123456789012:db:reports-db"
+    }
+  ],
+  "backup_jobs": {
+    "BackupJobs": [
+      {
+        "BackupJobId": "bj-0001-0000-4000-8000-0000000a0001",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-11T03:04:10.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0001",
+        "CompletionDate": "2026-10-11T03:40:10.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0003-0000-4000-8000-0000000a0003",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-13T03:05:12.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0003",
+        "CompletionDate": "2026-10-13T03:41:12.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0005-0000-4000-8000-0000000a0005",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-14T03:04:31.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0005",
+        "CompletionDate": "2026-10-14T03:39:31.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0009-0000-4000-8000-0000000a0009",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-11T03:02:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:sessions-table-0009",
+        "CompletionDate": "2026-10-11T03:11:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0011-0000-4000-8000-0000000a0011",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-12T03:02:05.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:sessions-table-0011",
+        "CompletionDate": "2026-10-12T03:11:05.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0013-0000-4000-8000-0000000a0013",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-13T03:02:03.000000+00:00",
+        "State": "FAILED",
+        "StatusMessage": "Access denied: kms:Decrypt on the table key. Check the key policy grants the AWS Backup service role."
+      },
+      {
+        "BackupJobId": "bj-0014-0000-4000-8000-0000000a0014",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-14T03:02:04.000000+00:00",
+        "State": "FAILED",
+        "StatusMessage": "Access denied: kms:Decrypt on the table key. Check the key policy grants the AWS Backup service role."
+      },
+      {
+        "BackupJobId": "bj-0016-0000-4000-8000-0000000a0016",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:s3:::example-media-assets",
+        "ResourceType": "S3",
+        "CreationDate": "2026-10-13T03:10:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:media-assets-0016",
+        "CompletionDate": "2026-10-13T03:52:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0018-0000-4000-8000-0000000a0018",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:s3:::example-media-assets",
+        "ResourceType": "S3",
+        "CreationDate": "2026-10-14T03:10:02.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:media-assets-0018",
+        "CompletionDate": "2026-10-14T03:51:02.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0021-0000-4000-8000-0000000a0021",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-04T04:30:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0021",
+        "CompletionDate": "2026-10-04T04:44:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0023-0000-4000-8000-0000000a0023",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-11T04:30:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0023",
+        "CompletionDate": "2026-10-11T04:45:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0025-0000-4000-8000-0000000a0025",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-13T03:32:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0025",
+        "CompletionDate": "2026-10-13T03:44:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0026-0000-4000-8000-0000000a0026",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-14T03:32:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0026",
+        "CompletionDate": "2026-10-14T03:45:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0029-0000-4000-8000-0000000a0029",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:reports-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-11T04:31:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:reports-db-0029",
+        "CompletionDate": "2026-10-11T04:59:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0031-0000-4000-8000-0000000a0031",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:reports-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-13T03:31:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:reports-db-0031",
+        "CompletionDate": "2026-10-13T03:58:00.000000+00:00"
+      },
+      {
+        "BackupJobId": "bj-0032-0000-4000-8000-0000000a0032",
+        "BackupVaultName": "backup-dr-demo-primary",
+        "BackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:reports-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-14T03:31:00.000000+00:00",
+        "State": "COMPLETED",
+        "RecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:reports-db-0032",
+        "CompletionDate": "2026-10-14T04:00:00.000000+00:00"
+      }
+    ]
+  },
+  "copy_jobs": {
+    "CopyJobs": [
+      {
+        "CopyJobId": "cj-0002-0000-4000-8000-0000000a0002",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0001",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-11T03:45:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:orders-db-0002",
+        "CompletionDate": "2026-10-11T04:19:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0004-0000-4000-8000-0000000a0004",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0003",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-13T03:46:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:orders-db-0004",
+        "CompletionDate": "2026-10-13T04:19:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0006-0000-4000-8000-0000000a0006",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:orders-db-0005",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:orders-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-14T03:44:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:orders-db-0006",
+        "CompletionDate": "2026-10-14T04:20:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0010-0000-4000-8000-0000000a0010",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:sessions-table-0009",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-11T03:15:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:sessions-table-0010",
+        "CompletionDate": "2026-10-11T03:21:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0012-0000-4000-8000-0000000a0012",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:sessions-table-0011",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:dynamodb:us-east-1:123456789012:table/sessions",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-12T03:15:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:sessions-table-0012",
+        "CompletionDate": "2026-10-12T03:22:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0017-0000-4000-8000-0000000a0017",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:media-assets-0016",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:s3:::example-media-assets",
+        "ResourceType": "S3",
+        "CreationDate": "2026-10-13T04:00:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:media-assets-0017",
+        "CompletionDate": "2026-10-13T04:55:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0019-0000-4000-8000-0000000a0019",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:media-assets-0018",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:s3:::example-media-assets",
+        "ResourceType": "S3",
+        "CreationDate": "2026-10-14T04:00:00.000000+00:00",
+        "State": "FAILED",
+        "StatusMessage": "Insufficient privileges to perform this action on the destination vault key."
+      },
+      {
+        "CopyJobId": "cj-0022-0000-4000-8000-0000000a0022",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0021",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-04T04:50:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:build-cache-0022",
+        "CompletionDate": "2026-10-04T05:10:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0024-0000-4000-8000-0000000a0024",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:build-cache-0023",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:ec2:us-east-1:123456789012:volume/vol-0example00000001",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-11T04:50:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:build-cache-0024",
+        "CompletionDate": "2026-10-11T05:12:00.000000+00:00"
+      },
+      {
+        "CopyJobId": "cj-0030-0000-4000-8000-0000000a0030",
+        "SourceBackupVaultArn": "arn:aws:backup:us-east-1:123456789012:backup-vault:backup-dr-demo-primary",
+        "SourceRecoveryPointArn": "arn:aws:backup:us-east-1:123456789012:recovery-point:reports-db-0029",
+        "DestinationBackupVaultArn": "arn:aws:backup:us-west-2:123456789012:backup-vault:backup-dr-demo-dr",
+        "ResourceArn": "arn:aws:rds:us-east-1:123456789012:db:reports-db",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-11T05:05:00.000000+00:00",
+        "State": "COMPLETED",
+        "DestinationRecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:reports-db-0030",
+        "CompletionDate": "2026-10-11T05:35:00.000000+00:00"
+      }
+    ]
+  },
+  "restore_jobs": {
+    "RestoreJobs": [
+      {
+        "RestoreJobId": "rj-0007-0000-4000-8000-0000000a0007",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:orders-db-0002",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-04T05:00:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-04T05:46:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:rds:us-west-2:123456789012:db:awsbackup-restore-test-orders-db",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "SUCCESSFUL",
+        "ValidationStatusMessage": "ok: instance status available; ok: endpoint reachable; ok: row count 18234 (minimum 1)"
+      },
+      {
+        "RestoreJobId": "rj-0008-0000-4000-8000-0000000a0008",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:orders-db-0002",
+        "ResourceType": "RDS",
+        "CreationDate": "2026-10-11T05:00:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-11T05:52:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:rds:us-west-2:123456789012:db:awsbackup-restore-test-orders-db",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "SUCCESSFUL",
+        "ValidationStatusMessage": "ok: instance status available; ok: endpoint reachable; ok: row count 18301 (minimum 1)"
+      },
+      {
+        "RestoreJobId": "rj-0015-0000-4000-8000-0000000a0015",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:sessions-table-0010",
+        "ResourceType": "DynamoDB",
+        "CreationDate": "2026-10-11T05:10:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-11T05:28:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:dynamodb:us-west-2:123456789012:table/awsbackup-restore-test-sessions",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "SUCCESSFUL",
+        "ValidationStatusMessage": "ok: table has >= 1 items (minimum 1)"
+      },
+      {
+        "RestoreJobId": "rj-0020-0000-4000-8000-0000000a0020",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:media-assets-0017",
+        "ResourceType": "S3",
+        "CreationDate": "2026-10-11T05:20:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-11T10:01:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:s3:::awsbackup-restore-test-media-assets-0001",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "SUCCESSFUL",
+        "ValidationStatusMessage": "ok: bucket has >= 1 objects; ok: checksums match on 5/5 sampled objects"
+      },
+      {
+        "RestoreJobId": "rj-0027-0000-4000-8000-0000000a0027",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:build-cache-0022",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-04T05:30:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-04T05:41:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:ec2:us-west-2:123456789012:volume/vol-0example0000restore",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "SUCCESSFUL",
+        "ValidationStatusMessage": "ok: volume state available"
+      },
+      {
+        "RestoreJobId": "rj-0028-0000-4000-8000-0000000a0028",
+        "RecoveryPointArn": "arn:aws:backup:us-west-2:123456789012:recovery-point:build-cache-0024",
+        "ResourceType": "EBS",
+        "CreationDate": "2026-10-11T05:30:00.000000+00:00",
+        "Status": "COMPLETED",
+        "CompletionDate": "2026-10-11T05:43:00.000000+00:00",
+        "CreatedResourceArn": "arn:aws:ec2:us-west-2:123456789012:volume/vol-0example0000restore",
+        "CreatedBy": {
+          "RestoreTestingPlanArn": "arn:aws:backup:us-west-2:123456789012:restore-testing-plan:backup_dr_demo_restore_tests-0a1b2c3d"
+        },
+        "ValidationStatus": "FAILED",
+        "ValidationStatusMessage": "FAIL: volume state error"
+      }
+    ]
+  }
+}

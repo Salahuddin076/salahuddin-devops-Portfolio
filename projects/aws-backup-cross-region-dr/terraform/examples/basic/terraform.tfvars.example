@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (git-ignored) and adjust. Values below are
+# documentation placeholders.
+primary_region        = "us-east-1"
+dr_region             = "us-west-2"
+owner                 = "platform-team"
+break_glass_role_arn  = "arn:aws:iam::123456789012:role/backup-break-glass"
+notification_emails   = ["backup-alerts@example.com"]
+rds_test_subnet_group = "restore-test-isolated"

@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "description": "Single source of truth for backup tiers. Terraform reads it with jsondecode(file()); scripts/check_plan_policy.py gates it in CI; scripts/rpo_rto_report.py reads the targets.",
+  "selection_tag_key": "backup-policy",
+  "copy_required_tiers": ["gold"],
+  "vault_lock": {
+    "mode": "governance",
+    "min_retention_days": 7,
+    "max_retention_days": 400,
+    "changeable_for_days": 3
+  },
+  "retention_minimums_days": {
+    "gold": { "daily": 35, "weekly": 90, "monthly": 365 },
+    "silver": { "daily": 7, "weekly": 35, "monthly": 180 }
+  },
+  "targets": {
+    "gold": { "rpo_hours": 26, "rto_hours": 4 },
+    "silver": { "rpo_hours": 50, "rto_hours": 24 }
+  },
+  "plans": {
+    "gold": {
+      "rules": [
+        {
+          "name": "daily",
+          "frequency": "daily",
+          "schedule": "cron(0 3 * * ? *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 360,
+          "delete_after_days": 35,
+          "cold_storage_after_days": null,
+          "continuous": true,
+          "copy_to_dr": true,
+          "dr_delete_after_days": 35,
+          "dr_cold_storage_after_days": null
+        },
+        {
+          "name": "weekly",
+          "frequency": "weekly",
+          "schedule": "cron(0 4 ? * SUN *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 480,
+          "delete_after_days": 90,
+          "cold_storage_after_days": null,
+          "continuous": false,
+          "copy_to_dr": true,
+          "dr_delete_after_days": 90,
+          "dr_cold_storage_after_days": null
+        },
+        {
+          "name": "monthly",
+          "frequency": "monthly",
+          "schedule": "cron(0 5 1 * ? *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 720,
+          "delete_after_days": 365,
+          "cold_storage_after_days": 30,
+          "continuous": false,
+          "copy_to_dr": true,
+          "dr_delete_after_days": 365,
+          "dr_cold_storage_after_days": 30
+        }
+      ]
+    },
+    "silver": {
+      "rules": [
+        {
+          "name": "daily",
+          "frequency": "daily",
+          "schedule": "cron(30 3 * * ? *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 360,
+          "delete_after_days": 7,
+          "cold_storage_after_days": null,
+          "continuous": false,
+          "copy_to_dr": false,
+          "dr_delete_after_days": null,
+          "dr_cold_storage_after_days": null
+        },
+        {
+          "name": "weekly",
+          "frequency": "weekly",
+          "schedule": "cron(30 4 ? * SUN *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 480,
+          "delete_after_days": 35,
+          "cold_storage_after_days": null,
+          "continuous": false,
+          "copy_to_dr": true,
+          "dr_delete_after_days": 35,
+          "dr_cold_storage_after_days": null
+        },
+        {
+          "name": "monthly",
+          "frequency": "monthly",
+          "schedule": "cron(30 5 1 * ? *)",
+          "start_window_minutes": 60,
+          "completion_window_minutes": 720,
+          "delete_after_days": 180,
+          "cold_storage_after_days": 30,
+          "continuous": false,
+          "copy_to_dr": false,
+          "dr_delete_after_days": null,
+          "dr_cold_storage_after_days": null
+        }
+      ]
+    }
+  }
+}
