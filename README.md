@@ -4,22 +4,35 @@ Working examples behind the projects on [salahuddin.wesaveall.com/projects](http
 
 Each project is labeled:
 
-- **Production case study** — a sanitized write-up of work from my CV. Client names, domains, account IDs and figures are withheld.
-- **Portfolio implementation** — code built for this portfolio on synthetic data.
-- **Reference architecture** — a documented design.
+- **Production case study:** a sanitized write-up of work from my CV. The code here is a reference implementation of that pattern. Client names, domains, account IDs and figures are withheld.
+- **Portfolio implementation:** code built for this portfolio on synthetic data.
+- **Reference architecture:** a documented design.
 
-All examples run locally with no cloud account. Terraform is validated only and is never applied from this repo.
+Every example runs locally with no cloud account. Terraform is validated only and is never applied from this repo.
 
-| # | Project | Label | Code |
+| # | Project | Label | What's in it |
 |---|---|---|---|
-| 14 | [Cloud Cost Optimization & FinOps Toolkit](projects/finops-cost-optimization/) | Portfolio implementation | ✅ Python toolkit, 71 tests, Terraform guardrails, CI |
+| 01 | [Multi-region EKS disaster recovery](projects/aws-multi-region-eks-dr/) | Production case study | Two-region Terraform, Aurora Global DB, hardened Helm chart, failover orchestrator with split-brain guards, runbooks · 100 tests |
+| 04 | [Enterprise AWS landing zone](projects/aws-landing-zone/) | Production case study | Organizations, SCPs, log archive, Identity Center, TGW hub · SCP checker and simulator · 130 tests |
+| 06 | [DevSecOps supply-chain pipeline](projects/devsecops-pipeline/) | Production case study | Reusable GitHub Actions workflow (gitleaks, Semgrep, Trivy, SBOM, cosign, ZAP) · workflow-hardening linter · 52 tests |
+| 10 | [Serverless event-driven pipeline](projects/aws-serverless-event-driven/) | Portfolio implementation | API Gateway, Lambda, SQS, DynamoDB idempotency, EventBridge · 74 tests |
+| 13 | [Cloud security and WAF automation](projects/cloud-security-waf-automation/) | Portfolio implementation | WAF count-then-block, GuardDuty/Security Hub routing, policy-as-code with SARIF · 99 tests |
+| 14 | [FinOps cost-optimization toolkit](projects/finops-cost-optimization/) | Portfolio implementation | Cost allocation, rightsizing, commitments, budget gate, Terraform guardrails · 71 tests |
+| 16 | [CodePipeline container delivery](projects/aws-codepipeline-container-delivery/) | Portfolio implementation | CodeBuild with Trivy gate, immutable images, ECS with approval · 39 tests |
+| 17 | [AWS Backup cross-region DR](projects/aws-backup-cross-region-dr/) | Portfolio implementation | Vault lock, cross-region copies, restore testing validator, RPO/RTO report · 118 tests |
+| 18 | [CloudFront + S3 static delivery](projects/cloudfront-s3-static-delivery/) | Portfolio implementation | OAC, security headers, tested edge function, OIDC deploys · 129 tests |
+| 19 | [ECS Fargate blue/green](projects/ecs-fargate-blue-green/) | Portfolio implementation | CodeDeploy canary/linear with test-listener hooks and alarm rollback · 105 tests |
+| 20 | [EKS secrets with the CSI driver](projects/eks-secrets-store-csi/) | Portfolio implementation | Secrets Manager mounts via Pod Identity, live rotation drill, secret scanners · 74 tests |
 
-The remaining 14 projects are documented on the website and are being implemented one at a time. See [docs/implementation-status.md](docs/implementation-status.md).
+Totals: 11 projects and 991 unit tests (stdlib Python, no dependencies). Every Terraform directory validates against `hashicorp/aws` 6.68.0. Both Helm charts pass `kubeconform -strict`. All 12 CI workflows pass the repository's own workflow-hardening linter: actions pinned to commit SHAs, least-privilege tokens, no persisted credentials.
+
+The remaining projects on the website (02, 03, 05, 07, 08, 09, 11, 12, 15) are documented designs without published code. See [docs/implementation-status.md](docs/implementation-status.md).
 
 ## Running a project
 
 ```bash
-cd projects/finops-cost-optimization
+cd projects/<project>
 python3 -m unittest discover -s tests -v
-python3 -m finops report --input sample-data --budget 6500 --out out --html
 ```
+
+Each project's README lists its demo commands and how to validate its Terraform.

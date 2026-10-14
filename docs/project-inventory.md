@@ -19,3 +19,8 @@ Source of truth for content is the website's `src/data/projects.ts`; this table 
 | 13 | cloud-security-waf-automation | Portfolio implementation | ACL blocking, least privilege, rotation, SIEM | — |
 | 14 | finops-cost-optimization | Portfolio implementation (synthetic data) | Rightsizing, snapshot/volume lifecycle | — |
 | 15 | ai-cloud-operations | Portfolio implementation | AI log anomaly detection, LLM-assisted ops | — |
+| 16 | aws-codepipeline-container-delivery | Portfolio implementation | Owner's choice: new projects are portfolio builds | — |
+| 17 | aws-backup-cross-region-dr | Portfolio implementation | same | — |
+| 18 | cloudfront-s3-static-delivery | Portfolio implementation | same | — |
+| 19 | ecs-fargate-blue-green | Portfolio implementation | same | — |
+| 20 | eks-secrets-store-csi | Portfolio implementation | same (the CV mentions this pattern, but the owner chose the portfolio label) | — |

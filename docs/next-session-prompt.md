@@ -2,4 +2,16 @@
 
 Paste this to start the next session:
 
-> Continue the DevOps portfolio. Read `salahuddin-devops-Portfolio/docs/session-handoff.md` first, then `docs/implementation-status.md` and `docs/known-issues.md`. Do not re-audit. Next: (1) implement Project 02 n8n-keda-automation-platform in `projects/n8n-keda-automation-platform/` (Kubernetes manifests with probes, limits, securityContext, NetworkPolicies, PDBs, a KEDA ScaledObject on Redis list length, Helm values, Terraform for the EKS add-ons; validate with kubeconform/helm lint if installed, otherwise a Python manifest-policy test); (2) implement Project 10 aws-serverless-event-driven (stdlib Python Lambda handlers with idempotency and partial batch failures, unit tests, Terraform validate). Run one build agent at a time against this repo and re-run its tests yourself. Then use gstack `/qa` on the local build for a keyboard/accessibility pass and run Lighthouse; add an OG image and an FAQ section. Flip `status` in the website's `src/data/projects.ts` only for projects that pass validation. Update the handoff at the end.
+> Continue the DevOps portfolio. Read `salahuddin-devops-Portfolio/docs/session-handoff.md` first, then `docs/implementation-status.md` and `docs/known-issues.md`. Do not re-audit.
+>
+> State: 11 of 20 projects are implemented and verified (991 tests). The design-only projects are 02, 03, 05, 07, 08, 09, 11, 12 and 15.
+>
+> Next, in order:
+> 1. Ask the owner whether to push both repos and merge the website to `main`. The merge also removes the leaked diagrams from the live site.
+> 2. Implement 02 n8n-keda (helm and kubeconform are installed).
+> 3. Implement 11 observability-sre.
+> 4. Implement 05 gitops.
+> 5. Run gstack `/qa` on the local website build, plus Lighthouse.
+> 6. Add an OG image and an FAQ section.
+>
+> Follow `CLAUDE.md`: one build agent at a time in this repo; re-run its checks before committing; workflows must pass the hardening linter. Flip `status` in the website's `src/data/projects.ts` only after verification. Update the handoff at the end.

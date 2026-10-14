@@ -15,13 +15,16 @@ Architecture-examples monorepo for Muhammad Salahuddin's DevOps / cloud portfoli
 - Every project is labeled *production case study* / *portfolio implementation* / *reference architecture*, and a project is "implemented" only when its tests and validation pass locally. Update `docs/implementation-status.md` and the website's `projects.ts` `status` together.
 - Prices and savings are illustrative unless sourced; say so.
 - Don't push, publish the repo, or deploy the website without the owner's explicit approval.
+- Every workflow must pass `python3 projects/devsecops-pipeline/policy/check_workflows.py --uri-base . .github/workflows --fail-on warning` (actions pinned to SHAs, `persist-credentials: false`, top-level `contents: read`).
+- Build projects with one subagent at a time in this repo, and re-run its checks yourself before committing.
 
 ## Commands (per project)
 - Python: `python3 -m unittest discover -s tests -v` (stdlib only; pytest isn't installed)
-- Terraform: `terraform fmt -check -recursive && terraform -chdir=<dir> init -backend=false && terraform -chdir=<dir> validate`
+- Terraform: `export TF_PLUGIN_CACHE_DIR=~/.terraform.d/plugin-cache` (aws 6.68.0 cached; otherwise ~13 min download), copy an existing `.terraform.lock.hcl` in before the first init, then `terraform fmt -check -recursive && terraform -chdir=<dir> init -backend=false && terraform -chdir=<dir> validate`
+- Kubernetes: `helm lint` and `helm template … | kubeconform -strict -summary -cache <dir>` (helm and kubeconform are installed)
 
 ## Skills
-Addy Osmani skills are cloned at `../agent-skills/skills/` — read only the relevant `SKILL.md` per phase (e.g. `test-driven-development`, `security-and-hardening`, `documentation-and-adrs`). gstack is not installed.
+Addy Osmani skills are cloned at `../agent-skills/skills/` — read only the relevant `SKILL.md` per phase (e.g. `test-driven-development`, `security-and-hardening`, `documentation-and-adrs`). gstack is installed — use `/qa` for browser QA of the website.
 
 ## Docs
 `docs/architecture/overview.md`, `docs/architecture/decisions.md`, `docs/project-inventory.md`, `docs/implementation-status.md`, `docs/testing-status.md`, `docs/known-issues.md`, `docs/next-session-prompt.md`.

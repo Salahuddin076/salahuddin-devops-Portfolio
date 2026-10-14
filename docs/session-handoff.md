@@ -1,5 +1,44 @@
 # Session handoff
 
+## Session 3 — 2026-10-14
+
+### Completed
+At the owner's request, 10 more projects were built: five existing designs got code, and five new projects were added. Each one was built by a subagent, **independently re-verified**, and committed on its own.
+
+| Commit | Project |
+|---|---|
+| `1d62afe` | 10 serverless event-driven |
+| `3310820` | 16 CodePipeline container delivery *(new)* |
+| `338f148` | 13 cloud security + WAF |
+| `bbd802c` | 04 landing zone |
+| `115df80` | 17 AWS Backup cross-region DR *(new)* |
+| `f87afe0` | 18 CloudFront + S3 delivery *(new)* |
+| `98226ec` | 19 ECS Fargate blue/green *(new)*. Reworked before commit to one ALB per environment, after the agent found that CodeDeploy is documented only with listener default actions. |
+| `918d5c4` | 06 DevSecOps pipeline |
+| `f5a64c9` | Hardened all workflows. Project 06's linter found 39 errors and 46 warnings in the other workflows; all actions are now pinned to SHAs and every checkout sets `persist-credentials: false`. |
+| `25c61b5` | 01 multi-region EKS DR |
+| `9f9ba4f` | 20 EKS Secrets Store CSI *(new)* |
+| `8cd0fa2` | Fixed a project-18 test that was stale after SHA pinning. Found by the full regression run. |
+
+**State now:**
+- **Examples repo:** 11 implemented projects, 991 tests, all green.
+- **Website:** 20 project pages; 11 are marked implemented, and the home page features only implemented ones.
+
+Website commits on `portfolio/phase-1-projects` this session: from `7ecdb4b` through `6d7640d`, one per project, plus `f1c05a1` (featured swap).
+
+### Not pushed
+Both repos have unpushed local commits. Pushing the website branch creates a Vercel preview; only a merge to `main` deploys production.
+
+### Decisions
+- New projects 16–20 are labeled portfolio implementations (owner's choice) and numbered in the order they were completed.
+- Production-case-study projects 01, 04 and 06 now have code. Their basis line says the code is a synthetic reference implementation.
+
+### Incidents
+K10 in `known-issues.md`: one agent ran `terraform apply` on a provider-less scratch config. There was no AWS impact, and the briefs were tightened afterwards.
+
+### Next
+See `next-session-prompt.md`.
+
 ## Session 2 — 2026-10-14 (resumed after two session restarts)
 
 ### Completed
