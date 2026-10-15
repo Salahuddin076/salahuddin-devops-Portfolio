@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "orders-api values",
+  "type": "object",
+  "required": ["env", "image", "resources", "rollout"],
+  "properties": {
+    "env": {"type": "string", "enum": ["dev", "staging", "prod"]},
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "additionalProperties": false,
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "tag": {
+          "type": "string",
+          "description": "Immutable: a 40-char git SHA or <semver>-<short sha>. Never latest.",
+          "pattern": "^([0-9a-f]{40}|v?[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,40})$"
+        },
+        "pullPolicy": {"type": "string", "enum": ["IfNotPresent", "Always"]}
+      }
+    },
+    "replicaCount": {"type": "integer", "minimum": 1},
+    "resources": {
+      "type": "object",
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": {"type": "object", "required": ["cpu", "memory"]},
+        "limits": {"type": "object", "required": ["memory"]}
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "minReplicas": {"type": "integer", "minimum": 1},
+        "maxReplicas": {"type": "integer", "minimum": 1}
+      }
+    },
+    "pdb": {"type": "object", "properties": {"enabled": {"type": "boolean"}}},
+    "externalSecret": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "storeName": {"type": "string", "minLength": 1},
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["secretKey", "remoteKey"],
+            "additionalProperties": false,
+            "properties": {
+              "secretKey": {"type": "string"},
+              "remoteKey": {"type": "string"},
+              "property": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "rollout": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "analysis": {
+          "type": "object",
+          "properties": {
+            "templateName": {"type": "string", "minLength": 1},
+            "successRate": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+          }
+        }
+      }
+    }
+  }
+}

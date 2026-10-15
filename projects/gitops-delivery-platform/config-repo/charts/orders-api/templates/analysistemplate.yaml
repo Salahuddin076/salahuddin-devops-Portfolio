@@ -1,0 +1,29 @@
+{{- if .Values.rollout.enabled }}
+{{- $a := .Values.rollout.analysis }}
+{{- $sel := printf "job=\"%s\",namespace=\"%s\",rollouts_pod_template_hash=\"{{args.canary-hash}}\"" (include "orders-api.name" .) .Release.Namespace }}
+# The availability SLI from projects/observability-sre-platform (good = non-5xx,
+# total = all requests), evaluated over the canary pods only.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ $a.templateName }}
+  labels:
+    {{- include "orders-api.labels" . | nindent 4 }}
+spec:
+  args:
+    - name: canary-hash
+  metrics:
+    - name: success-rate
+      interval: {{ $a.interval }}
+      count: {{ $a.count }}
+      failureLimit: {{ $a.failureLimit }}
+      # No data (no canary traffic yet) is a failed measurement, not a pass.
+      successCondition: len(result) > 0 && result[0] >= {{ $a.successRate }}
+      provider:
+        prometheus:
+          address: {{ $a.prometheusAddress }}
+          query: |
+            sum(rate(http_requests_total{ {{- $sel }},code!~"5.."}[{{ $a.window }}]))
+            /
+            sum(rate(http_requests_total{ {{- $sel }}}[{{ $a.window }}]))
+{{- end }}

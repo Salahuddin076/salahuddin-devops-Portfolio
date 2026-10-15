@@ -1,0 +1,22 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "orders-api.fullname" . }}
+  labels:
+    {{- include "orders-api.labels" . | nindent 4 }}
+spec:
+  # job="orders-api" in Prometheus, as the analysis query expects.
+  jobLabel: app.kubernetes.io/name
+  # Copies the Rollouts pod hash onto every series so canary pods can be selected
+  # (Prometheus sanitizes it to rollouts_pod_template_hash).
+  podTargetLabels:
+    - rollouts-pod-template-hash
+  selector:
+    matchLabels:
+      {{- include "orders-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}

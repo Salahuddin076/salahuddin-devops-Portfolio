@@ -1,0 +1,39 @@
+# orders-api desired state: prod.
+# Promoted from staging with scripts/promote.py; synced by hand inside the sync window,
+# then rolled out as a canary gated by the success-rate analysis.
+env: prod
+
+image:
+  # Immutable tag, copied from staging by the promotion PR.
+  tag: "v1.3.0-7a1c9e2"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+autoscaling:
+  minReplicas: 4
+  maxReplicas: 12
+
+pdb:
+  minAvailable: 2
+
+ingress:
+  host: orders.example.com
+
+externalSecret:
+  storeName: aws-secrets-manager-prod
+  data:
+    - secretKey: DATABASE_URL
+      remoteKey: example/orders-api/prod/database
+      property: url
+
+rollout:
+  enabled: true
+  analysis:
+    templateName: orders-api-success-rate
+    successRate: 0.99

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Helm
+config-repo/charts/*/charts/
+*.tgz
+
+# Local exports and scratch (kubectl dumps can contain secrets)
+*.local.json
+*.local.yaml
+live-export*/
+secrets/
+.env

@@ -1,0 +1,27 @@
+# orders-api desired state: dev.
+# CI opens a PR that changes only image.tag; everything else is edited by hand.
+env: dev
+
+image:
+  # Immutable tag: the app-repo commit SHA that CI built and pushed.
+  tag: 9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e
+
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 3
+
+pdb:
+  minAvailable: 0
+
+ingress:
+  host: orders.dev.example.com
+
+externalSecret:
+  storeName: aws-secrets-manager-dev
+  data:
+    - secretKey: DATABASE_URL
+      remoteKey: example/orders-api/dev/database
+      property: url
+
+rollout:
+  enabled: false

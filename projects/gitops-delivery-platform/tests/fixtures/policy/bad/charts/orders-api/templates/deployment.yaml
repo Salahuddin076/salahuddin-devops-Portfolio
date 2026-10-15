@@ -1,0 +1,5 @@
+# A chart without an AnalysisTemplate: prod cannot be gated.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api

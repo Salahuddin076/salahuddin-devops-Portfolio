@@ -1,0 +1,341 @@
+---
+# Source: orders-api/templates/networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: orders-api
+      app.kubernetes.io/instance: orders-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: http
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 10.20.0.0/16
+      ports:
+        - port: 5432
+          protocol: TCP
+
+---
+# Source: orders-api/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orders-api
+      app.kubernetes.io/instance: orders-api
+
+---
+# Source: orders-api/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+automountServiceAccountToken: false
+
+---
+# Source: orders-api/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+
+---
+# Source: orders-api/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orders-api
+      app.kubernetes.io/instance: orders-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: orders-api
+        app.kubernetes.io/instance: orders-api
+        app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+        app.kubernetes.io/part-of: gitops-delivery-platform
+        app.kubernetes.io/managed-by: Helm
+        helm.sh/chart: orders-api-1.3.0
+        example.com/environment: dev
+    spec:
+      serviceAccountName: orders-api
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: orders-api
+              app.kubernetes.io/instance: orders-api
+      containers:
+        - name: orders-api
+          image: ghcr.io/example-org/orders-api:9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: APP_ENV
+              value: "dev"
+            - name: APP_VERSION
+              value: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+            - name: PORT
+              value: "8080"
+          envFrom:
+            - secretRef:
+                name: orders-api-secrets
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            privileged: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+
+---
+# Source: orders-api/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orders-api
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+# Source: orders-api/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-example
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - orders.dev.example.com
+      secretName: orders-api-tls
+  rules:
+    - host: orders.dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: orders-api
+                port:
+                  name: http
+
+---
+# Source: orders-api/templates/externalsecret.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: aws-secrets-manager-dev
+  target:
+    name: orders-api-secrets
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: DATABASE_URL
+      remoteRef:
+        key: example/orders-api/dev/database
+        property: url
+
+---
+# Source: orders-api/templates/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: orders-api
+  labels:
+    app.kubernetes.io/name: orders-api
+    app.kubernetes.io/instance: orders-api
+    app.kubernetes.io/version: "9f3c2a7e5b1d4c8f6a0e2b7d9c1f3a5e7b9d0c2e"
+    app.kubernetes.io/part-of: gitops-delivery-platform
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: orders-api-1.3.0
+    example.com/environment: dev
+spec:
+  # job="orders-api" in Prometheus, as the analysis query expects.
+  jobLabel: app.kubernetes.io/name
+  # Copies the Rollouts pod hash onto every series so canary pods can be selected
+  # (Prometheus sanitizes it to rollouts_pod_template_hash).
+  podTargetLabels:
+    - rollouts-pod-template-hash
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orders-api
+      app.kubernetes.io/instance: orders-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

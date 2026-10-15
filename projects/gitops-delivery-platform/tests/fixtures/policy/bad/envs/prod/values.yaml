@@ -1,0 +1,5 @@
+env: prod
+image:
+  tag: v1.3.0-7a1c9e2
+rollout:
+  enabled: false

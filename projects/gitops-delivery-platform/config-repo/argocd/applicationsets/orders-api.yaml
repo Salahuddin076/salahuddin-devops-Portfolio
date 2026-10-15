@@ -1,0 +1,81 @@
+# One Application per directory under envs/ (dev, staging, prod).
+# The sync policy differs per environment through templatePatch:
+#   dev      automated, selfHeal, prune
+#   staging  automated, selfHeal, no prune
+#   prod     manual (and the AppProject's deny windows apply)
+# A new directory gets the template's default: manual sync, no prune.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: orders-api
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/orders-config.git
+        revision: main
+        directories:
+          - path: envs/*
+  syncPolicy:
+    # Deleting the ApplicationSet (or an env directory) never deletes workloads.
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: "orders-api-{{ .path.basename }}"
+      labels:
+        app.kubernetes.io/part-of: orders-api
+        example.com/environment: "{{ .path.basename }}"
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-failed.slack: orders-alerts
+        notifications.argoproj.io/subscribe.on-health-degraded.slack: orders-alerts
+    spec:
+      project: orders-api
+      source:
+        repoURL: https://github.com/example-org/orders-config.git
+        targetRevision: main
+        path: charts/orders-api
+        helm:
+          releaseName: orders-api
+          valueFiles:
+            - "../../envs/{{ .path.basename }}/values.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "orders-{{ .path.basename }}"
+      revisionHistoryLimit: 10
+      # The HPA owns the replica count; never report it as drift or reset it.
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+        - group: argoproj.io
+          kind: Rollout
+          jsonPointers:
+            - /spec/replicas
+      syncPolicy:
+        syncOptions:
+          - RespectIgnoreDifferences=true
+          - PruneLast=true
+          - FailOnSharedResource=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+  templatePatch: |
+    {{- if eq .path.basename "dev" }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+    {{- else if eq .path.basename "staging" }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+    {{- end }}

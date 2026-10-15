@@ -1,0 +1,85 @@
+# Values for the upstream argo/argo-cd chart, pinned in docs/operations.md:
+#   helm upgrade --install argocd argo/argo-cd --version 10.10.3 -n argocd -f bootstrap/argo-cd-values.yaml
+# Placeholders only: example.com hosts, an OIDC issuer and a Slack token that
+# comes from a Kubernetes Secret (synced by External Secrets), never from git.
+
+global:
+  domain: argocd.example.com
+
+configs:
+  params:
+    # TLS terminates at the ingress controller.
+    server.insecure: true
+  cm:
+    # Local admin is disabled after bootstrap; people sign in through SSO.
+    admin.enabled: false
+    exec.enabled: false
+    timeout.reconciliation: 180s
+    oidc.config: |
+      name: SSO
+      issuer: https://sso.example.com/realms/engineering
+      clientID: argocd
+      clientSecret: $argocd-oidc:clientSecret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+        - groups
+    # Rollout health (Paused = Suspended, Degraded) is built into Argo CD; no Lua needed.
+  rbac:
+    # Nobody gets anything by default; project roles (AppProject spec.roles) grant per team.
+    policy.default: ""
+    scopes: "[groups]"
+    policy.csv: |
+      g, example-org:platform-admins, role:admin
+      g, example-org:engineering, role:readonly
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-example
+    tls: true
+
+notifications:
+  enabled: true
+  # The Secret argocd-notifications-secret (key slack-token) is created by an
+  # ExternalSecret, not by this chart.
+  secret:
+    create: false
+  notifiers:
+    service.slack: |
+      token: $slack-token
+  templates:
+    template.app-sync-failed: |
+      message: |
+        :red_circle: {{.app.metadata.name}} sync failed at {{.app.status.operationState.finishedAt}}.
+        Revision {{.app.status.sync.revision}}: {{.app.status.operationState.message}}
+    template.app-health-degraded: |
+      message: |
+        :warning: {{.app.metadata.name}} is {{.app.status.health.status}}.
+        {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  triggers:
+    trigger.on-sync-failed: |
+      - description: Sync ended in Error or Failed
+        send:
+          - app-sync-failed
+        when: app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
+    trigger.on-health-degraded: |
+      - description: Application health is Degraded
+        send:
+          - app-health-degraded
+        when: app.status.health.status == 'Degraded'
+
+applicationSet:
+  replicas: 2
+
+controller:
+  replicas: 1
+
+repoServer:
+  replicas: 2
+
+redis-ha:
+  enabled: false

@@ -1,0 +1,39 @@
+# BAD on purpose: prod automated, prune in staging, dev without prune, no
+# ignoreDifferences for HPA replicas, no notifications.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: orders-api
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/orders-config.git
+        revision: main
+        directories:
+          - path: envs/*
+  template:
+    metadata:
+      name: "orders-api-{{ .path.basename }}"
+    spec:
+      project: orders-api
+      source:
+        repoURL: https://github.com/example-org/orders-config.git
+        targetRevision: main
+        path: charts/orders-api
+        helm:
+          valueFiles:
+            - "../../envs/{{ .path.basename }}/values.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "orders-{{ .path.basename }}"
+  templatePatch: |
+    spec:
+      syncPolicy:
+        automated:
+          {{- if eq .path.basename "dev" }}
+          selfHeal: true
+          {{- else }}
+          prune: true
+          {{- end }}

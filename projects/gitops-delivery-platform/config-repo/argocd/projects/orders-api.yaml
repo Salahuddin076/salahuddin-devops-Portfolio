@@ -1,0 +1,79 @@
+# The boundary for the orders-api team: one repo, three namespaces, no
+# cluster-scoped resources, and only the namespaced kinds the chart renders.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: orders-api
+  namespace: argocd
+spec:
+  description: orders-api in dev, staging and prod (synthetic reference implementation)
+  sourceRepos:
+    - https://github.com/example-org/orders-config.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: orders-dev
+    - server: https://kubernetes.default.svc
+      namespace: orders-staging
+    - server: https://kubernetes.default.svc
+      namespace: orders-prod
+  # Empty list: no cluster-scoped kind (Namespace, ClusterRole, CRD, webhook...)
+  # can be created from this project. Namespaces come from the platform project.
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: argoproj.io
+      kind: Rollout
+    - group: argoproj.io
+      kind: AnalysisTemplate
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: external-secrets.io
+      kind: ExternalSecret
+  orphanedResources:
+    warn: true
+  roles:
+    - name: deployer
+      description: Sync and roll back any orders-api environment (prod still obeys the sync windows).
+      groups:
+        - example-org:orders-maintainers
+      policies:
+        - p, proj:orders-api:deployer, applications, get, orders-api/*, allow
+        - p, proj:orders-api:deployer, applications, sync, orders-api/*, allow
+        - p, proj:orders-api:deployer, applications, action/argoproj.io/Rollout/*, orders-api/*, allow
+    - name: viewer
+      description: Read-only access for the wider engineering group.
+      groups:
+        - example-org:engineering
+      policies:
+        - p, proj:orders-api:viewer, applications, get, orders-api/*, allow
+  # prod syncs only in business hours (08:00-17:00 UTC, Mon-Fri). manualSync is
+  # false, so even a manual sync is refused outside the window; the break-glass
+  # override is a reviewed PR that sets manualSync: true (docs/operations.md).
+  syncWindows:
+    - kind: deny
+      schedule: "0 17 * * 1-5"
+      duration: 15h
+      applications:
+        - orders-api-prod
+      manualSync: false
+      timeZone: UTC
+    - kind: deny
+      schedule: "0 0 * * 6"
+      duration: 56h
+      applications:
+        - orders-api-prod
+      manualSync: false
+      timeZone: UTC

@@ -1,0 +1,39 @@
+{{- if .Values.rollout.enabled }}
+{{- $a := .Values.rollout.analysis }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "orders-api.fullname" . }}
+  labels:
+    {{- include "orders-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      {{- include "orders-api.selectorLabels" . | nindent 6 }}
+  strategy:
+    canary:
+      # No traffic router: weights are approximated by the canary/stable pod
+      # ratio. The analysis isolates canary pods by their template hash.
+      maxUnavailable: 0
+      maxSurge: 25%
+      steps:
+        {{- range .Values.rollout.canary.steps }}
+        {{- if hasKey . "analysis" }}
+        - analysis:
+            templates:
+              - templateName: {{ $a.templateName }}
+            args:
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+        {{- else }}
+        - {{ toYaml . | indent 10 | trim }}
+        {{- end }}
+        {{- end }}
+  template:
+    {{- include "orders-api.podTemplate" . | nindent 4 }}
+{{- end }}

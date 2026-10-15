@@ -1,0 +1,15 @@
+# BAD on purpose: targets kube-system, outside the project's destinations, from an unlisted repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: debug-tools
+  namespace: argocd
+spec:
+  project: orders-api
+  source:
+    repoURL: https://github.com/example-org/random-tools.git
+    targetRevision: main
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system

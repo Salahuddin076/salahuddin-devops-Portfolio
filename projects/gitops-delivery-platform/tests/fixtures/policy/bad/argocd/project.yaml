@@ -1,0 +1,31 @@
+# BAD on purpose: cluster-wide kinds allowed, an incomplete deny schedule, and a
+# deny window that still lets people sync prod by hand.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: orders-api
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://github.com/example-org/orders-config.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: orders-*
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  syncWindows:
+    - kind: deny
+      schedule: "0 0 * * 6"
+      duration: 48h
+      applications:
+        - orders-api-prod
+      manualSync: false
+      timeZone: UTC
+    - kind: deny
+      schedule: "0 17 * * 1-5"
+      duration: 15h
+      applications:
+        - orders-api-prod
+      manualSync: true
+      timeZone: UTC

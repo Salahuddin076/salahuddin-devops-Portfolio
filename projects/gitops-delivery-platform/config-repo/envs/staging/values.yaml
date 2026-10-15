@@ -1,0 +1,24 @@
+# orders-api desired state: staging.
+# Promoted from dev with scripts/promote.py (a PR); Argo CD syncs it automatically.
+env: staging
+
+image:
+  # Immutable tag, copied from dev by the promotion PR.
+  tag: 4b8e1d0c6a2f9e3b7d5c1a8f0e6b2d4c9a7e3f1b
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 4
+
+ingress:
+  host: orders.staging.example.com
+
+externalSecret:
+  storeName: aws-secrets-manager-staging
+  data:
+    - secretKey: DATABASE_URL
+      remoteKey: example/orders-api/staging/database
+      property: url
+
+rollout:
+  enabled: false

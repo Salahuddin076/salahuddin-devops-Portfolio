@@ -1,0 +1,108 @@
+# Chart defaults. Per-environment overrides live in envs/<env>/values.yaml,
+# which Argo CD passes as a value file. image.tag has no default on purpose:
+# rendering fails unless an environment sets an immutable tag.
+
+# dev | staging | prod; also the APP_ENV variable and part of resource labels.
+env: dev
+
+image:
+  repository: ghcr.io/example-org/orders-api
+  pullPolicy: IfNotPresent
+
+# Used only when autoscaling is disabled. With the HPA on, spec.replicas is
+# left out so Argo CD and the HPA never fight over it.
+replicaCount: 2
+
+containerPort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+serviceAccount:
+  create: true
+  # The app calls no Kubernetes API.
+  automountToken: false
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: orders.dev.example.com
+  tlsSecretName: orders-api-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-example
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Namespaces allowed to reach the pods (by kubernetes.io/metadata.name).
+  ingressNamespaces:
+    - ingress-nginx
+    - monitoring
+  # The database lives outside the cluster (RFC 1918 placeholder).
+  databaseCIDR: 10.20.0.0/16
+  databasePort: 5432
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+
+# The app's only secret comes from AWS Secrets Manager through External
+# Secrets Operator. No plaintext secret is rendered by this chart.
+externalSecret:
+  enabled: true
+  # A ClusterSecretStore per environment, restricted to that namespace.
+  storeName: aws-secrets-manager-dev
+  refreshInterval: 1h
+  targetName: orders-api-secrets
+  data:
+    - secretKey: DATABASE_URL
+      remoteKey: example/orders-api/dev/database
+      property: url
+
+# Progressive delivery. When enabled the chart renders an Argo Rollouts
+# Rollout (canary) and an AnalysisTemplate instead of a Deployment.
+rollout:
+  enabled: false
+  canary:
+    # setWeight 10 -> analysis -> 50 -> analysis -> 100 (100 is implicit at the end)
+    steps:
+      - setWeight: 10
+      - pause:
+          duration: 2m
+      - analysis: true
+      - setWeight: 50
+      - pause:
+          duration: 5m
+      - analysis: true
+      - setWeight: 100
+  analysis:
+    templateName: orders-api-success-rate
+    prometheusAddress: http://prometheus-operated.monitoring.svc:9090
+    # Canary success rate (non-5xx / all) required at every measurement.
+    successRate: 0.99
+    window: 2m
+    interval: 1m
+    count: 5
+    failureLimit: 1
+
+podAnnotations: {}
+
+nodeSelector: {}
+tolerations: []
