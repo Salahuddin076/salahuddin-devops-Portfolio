@@ -1,5 +1,18 @@
 # Session handoff
 
+## Session 3, continued — 2026-10-15
+
+Three more design-only projects were implemented and independently verified: **02** n8n + KEDA (`cff364a`), **11** SLO-driven observability (`da44c44`) and **05** GitOps (`210fe81`). The website pages are updated, the home page features nine implemented projects, and an OG share image and an FAQ section were added (`25eb40c`).
+
+There are now **14 implemented and 6 design-only projects** (03, 07, 08, 09, 12, 15).
+
+Incidents K12 and K13 (see `known-issues.md`) led to tighter build-agent briefs:
+- no cloud CLIs;
+- quoted heredocs only;
+- no machine-wide Docker cleanup.
+
+Nothing from this continuation is pushed yet.
+
 ## Session 3 — 2026-10-14
 
 ### Completed

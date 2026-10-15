@@ -5,16 +5,16 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | # | Project | Label (website) | Code + docs | Tests | Terraform / K8s validation | Overall |
 |---|---|---|---|---|---|---|
 | 01 | aws-multi-region-eks-dr | Production case study | ✅ | 100 ✅ | 5 dirs validate · helm lint + kubeconform strict 11/11 (both regions) | **Implemented** |
-| 02 | n8n-keda-automation-platform | Production case study | page only | — | — | Design |
+| 02 | n8n-keda-automation-platform | Production case study | ✅ | 96 ✅ | 2 dirs validate · helm lint + kubeconform strict 16/17 incl. KEDA/SPC/SGP CRDs · n8n settings verified against the image | **Implemented** |
 | 03 | graviton-arm64-migration | Reference architecture | page only | — | — | Design |
 | 04 | aws-landing-zone | Production case study | ✅ | 130 ✅ | 10 dirs validate | **Implemented** |
-| 05 | gitops-delivery-platform | Production case study | page only | — | — | Design |
+| 05 | gitops-delivery-platform | Production case study | ✅ | 85 ✅ | kubeconform strict per env + Argo CD/Rollouts CRDs · policy check · 2 workflows lint 0/0 | **Implemented** |
 | 06 | devsecops-pipeline | Production case study | ✅ | 52 ✅ | workflow lint 0/0; scanners run locally via Docker | **Implemented** |
 | 07 | gcp-ai-pharmacy-platform | Production case study | page only | — | — | Design |
 | 08 | azure-aks-platform | Reference architecture | page only | — | — | Design |
 | 09 | multi-cloud-kubernetes | Reference architecture | page only | — | — | Design |
 | 10 | aws-serverless-event-driven | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate | **Implemented** |
-| 11 | observability-sre-platform | Production case study | page only | — | — | Design |
+| 11 | observability-sre-platform | Production case study | ✅ | 79 ✅ | promtool check + 8 rule tests, amtool, otelcol validate (agent-run via Docker) · kubeconform strict incl. CRDs | **Implemented** |
 | 12 | hybrid-cloud-fintech | Production case study | page only | — | — | Design |
 | 13 | cloud-security-waf-automation | Portfolio implementation | ✅ | 99 ✅ | 3 dirs validate | **Implemented** |
 | 14 | finops-cost-optimization | Portfolio implementation | ✅ | 71 ✅ | 2 dirs validate | **Implemented** |
@@ -25,7 +25,7 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | 19 | ecs-fargate-blue-green | Portfolio implementation | ✅ | 105 ✅ | 6 dirs validate · arm64 image built and run | **Implemented** |
 | 20 | eks-secrets-store-csi | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate · kubeconform strict incl. CRD schema | **Implemented** |
 
-**11 implemented, 9 design.** In total: 991 tests, and a full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`). Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS.
+**14 implemented, 6 design.** In total: 1,251 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS.
 
 Projects 16–20 were added in session 3. At the owner's request they are all labeled portfolio implementations, and they are numbered in the order they were completed.
 
