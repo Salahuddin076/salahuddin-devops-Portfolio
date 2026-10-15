@@ -1,0 +1,77 @@
+# Labels the Prometheus and Alertmanager custom resources select on
+# (serviceMonitorSelector, probeSelector, alertmanagerConfigSelector).
+selectorLabels:
+  prometheus: platform
+
+# jobLabel names the Service label whose value becomes `job`; the SLIs select
+# on job="checkout-api" and job="orders-worker".
+serviceMonitors:
+  - name: checkout-api
+    namespace: checkout
+    jobLabel: app.kubernetes.io/name
+    matchLabels:
+      app.kubernetes.io/name: checkout-api
+    port: http-metrics
+    path: /metrics
+    interval: 30s
+  - name: orders-worker
+    namespace: orders
+    jobLabel: app.kubernetes.io/name
+    matchLabels:
+      app.kubernetes.io/name: orders-worker
+    port: http-metrics
+    path: /metrics
+    interval: 30s
+
+# Blackbox exporter probe for the public website SLO (probe_success).
+probe:
+  enabled: true
+  name: blackbox-website
+  jobName: blackbox-website
+  interval: 30s
+  module: http_2xx
+  proberUrl: blackbox-exporter.observability.svc:9115
+  targets:
+    - https://www.example.com
+
+alertmanager:
+  # Reference this AlertmanagerConfig from the Alertmanager resource as its
+  # global config (spec.alertmanagerConfiguration.name). Otherwise the operator
+  # adds a namespace matcher to every route, and the SLO alerts (which carry
+  # no namespace label) would not match.
+  configName: slo-routing
+  # Every receiver credential lives in one Secret managed outside this chart
+  # (External Secrets / Secrets Manager). The chart only references keys.
+  receiverSecret: alertmanager-receivers
+  pager:
+    routingKeyKey: pagerduty-routing-key
+  ticket:
+    urlKey: ticket-webhook-url
+  deadMansSwitch:
+    urlKey: deadmans-switch-url
+  groupBy:
+    - alertname
+    - service
+    - slo
+  groupWait: 30s
+  groupInterval: 5m
+  repeatInterval: 4h
+  pageRepeatInterval: 1h
+  ticketRepeatInterval: 12h
+
+otelCollector:
+  enabled: true
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: "0.130.0"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  # GOMEMLIMIT tracks the container limit so the Go GC works before the
+  # memory_limiter processor has to refuse data.
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+  goMemLimit: 900MiB

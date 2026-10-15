@@ -1,0 +1,15 @@
+apiVersion: v2
+name: observability-stack
+description: SLO platform glue for a cluster that already runs the Prometheus Operator. ServiceMonitors and a blackbox Probe for the synthetic services, an AlertmanagerConfig with page and ticket routes, inhibition and a dead man's switch, and an OpenTelemetry Collector gateway that scrubs PII. The PrometheusRules come from generated/kubernetes (slogen), not from this chart.
+type: application
+version: 0.1.0
+appVersion: "0.130.0"
+kubeVersion: ">=1.30.0-0"
+keywords:
+  - slo
+  - prometheus-operator
+  - alertmanager
+  - opentelemetry
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

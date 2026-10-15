@@ -1,0 +1,54 @@
+# Local demo only: native Alertmanager config with the same routing tree as
+# the chart's AlertmanagerConfig (helm/observability-stack). Every receiver is
+# a webhook into the demo app so nothing leaves the machine. In the cluster,
+# `pager` is PagerDuty and `ticket` / `deadmans-switch` are external webhooks.
+route:
+  receiver: ticket
+  group_by:
+    - alertname
+    - service
+    - slo
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Dead man's switch: the always-firing Watchdog, every minute.
+    - receiver: deadmans-switch
+      matchers:
+        - 'alertname="Watchdog"'
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 1m
+    - receiver: pager
+      matchers:
+        - 'severity="page"'
+      group_wait: 10s
+      repeat_interval: 1h
+    - receiver: ticket
+      matchers:
+        - 'severity="ticket"'
+      repeat_interval: 12h
+
+inhibit_rules:
+  # A page for an SLO suppresses that SLO's tickets.
+  - source_matchers:
+      - 'severity="page"'
+    target_matchers:
+      - 'severity="ticket"'
+    equal:
+      - service
+      - slo
+
+receivers:
+  - name: pager
+    webhook_configs:
+      - url: http://demo-app:8080/alerts/pager
+        send_resolved: true
+  - name: ticket
+    webhook_configs:
+      - url: http://demo-app:8080/alerts/ticket
+        send_resolved: true
+  - name: deadmans-switch
+    webhook_configs:
+      - url: http://demo-app:8080/alerts/deadmans-switch
+        send_resolved: false

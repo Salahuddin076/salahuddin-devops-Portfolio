@@ -1,0 +1,332 @@
+# promtool unit tests for the generated rules. Hand-written on purpose: the
+# expected values come from the SLO math, not from the generator, so a
+# generator bug fails here. Run from the project directory:
+#   docker run --rm -v "$PWD:/work:ro" -w /work --entrypoint promtool \
+#     prom/prometheus:v3.5.0 test rules tests/promtool/slo-alerts.test.yml
+rule_files:
+  - ../../generated/prometheus/checkout-api.rules.yml
+  - ../../generated/prometheus/orders-worker.rules.yml
+  - ../../generated/prometheus/public-website.rules.yml
+  - ../../generated/prometheus/meta.rules.yml
+
+evaluation_interval: 1m
+
+# Each recording group runs before its alert group, so an alert reads the
+# ratio from the same evaluation. A real Prometheus runs groups on independent
+# timers, so there an alert can lag its recording rules by one interval.
+group_eval_order:
+  - slo-public-website-availability-sli
+  - slo-public-website-availability-alerts
+  - slo-checkout-api-availability-sli
+  - slo-checkout-api-availability-alerts
+  - slo-checkout-api-latency-sli
+  - slo-checkout-api-latency-alerts
+  - slo-orders-worker-freshness-sli
+  - slo-orders-worker-freshness-alerts
+  - slo-meta
+
+tests:
+  # 1. Checkout at a constant 5% error ratio = 50x the 0.1% budget.
+  #    Both page tiers fire after their 2m `for`; tickets are still pending at
+  #    10m (15m `for`) and firing at 20m.
+  - name: checkout availability, constant 5% errors
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="checkout-api",code="200"}'
+        values: '0+950x180'
+      - series: 'http_requests_total{job="checkout-api",code="500"}'
+        values: '0+50x180'
+    promql_expr_test:
+      # round(): 1 - 950/1000 is 0.05000000000000004 in floating point.
+      - expr: round(slo:sli_error:ratio_rate5m{service="checkout-api",slo="availability"} * 1000)
+        eval_time: 10m
+        exp_samples:
+          - labels: '{service="checkout-api",slo="availability"}'
+            value: 50
+      # Burn rate = error ratio / error budget = 0.05 / 0.001 = 50x.
+      - expr: round(slo:sli_error:ratio_rate1h{service="checkout-api",slo="availability"} / slo:error_budget:ratio{service="checkout-api",slo="availability"})
+        eval_time: 30m
+        exp_samples:
+          - labels: '{service="checkout-api",slo="availability"}'
+            value: 50
+      # Every 5m ratio so far is 0.05, so the 30d mean is 0.05 and the budget
+      # remaining is 1 - 0.05 / 0.001 = -49 (overspent 49 times).
+      - expr: round(slo:period_error_budget_remaining:ratio{service="checkout-api",slo="availability"})
+        eval_time: 60m
+        exp_samples:
+          - labels: '{service="checkout-api",slo="availability"}'
+            value: -49
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: CheckoutApiAvailabilityBurnPage1h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: payments
+              tier: page-1h
+              burn_rate: "14.4"
+              long_window: 1h
+              short_window: 5m
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 14.4x or faster (1h and 5m windows)"
+              description: "The 1h error ratio is 5% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 14.4x burn consumes 2% of the 30d budget every 1h and exhausts it in 2.1d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-fast-burn.md"
+      - eval_time: 10m
+        alertname: CheckoutApiAvailabilityBurnPage6h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: payments
+              tier: page-6h
+              burn_rate: "6"
+              long_window: 6h
+              short_window: 30m
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 6x or faster (6h and 30m windows)"
+              description: "The 6h error ratio is 5% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 6x burn consumes 5% of the 30d budget every 6h and exhausts it in 5.0d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-fast-burn.md"
+      - eval_time: 10m
+        alertname: CheckoutApiAvailabilityBurnTicket1d
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: CheckoutApiAvailabilityBurnTicket1d
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              team: payments
+              tier: ticket-1d
+              burn_rate: "3"
+              long_window: 1d
+              short_window: 2h
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 3x or faster (1d and 2h windows)"
+              description: "The 1d error ratio is 5% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 3x burn consumes 10% of the 30d budget every 1d and exhausts it in 10.0d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-slow-burn.md"
+      - eval_time: 20m
+        alertname: CheckoutApiAvailabilityBurnTicket3d
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              team: payments
+              tier: ticket-3d
+              burn_rate: "1"
+              long_window: 3d
+              short_window: 6h
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 1x or faster (3d and 6h windows)"
+              description: "The 3d error ratio is 5% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 1x burn consumes 10% of the 30d budget every 3d and exhausts it in 30.0d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-slow-burn.md"
+      # The latency SLO has no histogram series in this test: no data, no alert.
+      - eval_time: 20m
+        alertname: CheckoutApiLatencyBurnPage1h
+        exp_alerts: []
+
+  # 2. Healthy: 0.05% errors = 0.5x. Nothing fires, even after 3 hours.
+  - name: checkout availability, healthy at 0.5x
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="checkout-api",code="200"}'
+        values: '0+9995x180'
+      - series: 'http_requests_total{job="checkout-api",code="500"}'
+        values: '0+5x180'
+    alert_rule_test:
+      - eval_time: 170m
+        alertname: CheckoutApiAvailabilityBurnPage1h
+        exp_alerts: []
+      - eval_time: 170m
+        alertname: CheckoutApiAvailabilityBurnPage6h
+        exp_alerts: []
+      - eval_time: 170m
+        alertname: CheckoutApiAvailabilityBurnTicket1d
+        exp_alerts: []
+      - eval_time: 170m
+        alertname: CheckoutApiAvailabilityBurnTicket3d
+        exp_alerts: []
+
+  # 3. Total outage with no "good" series at all (only code="500" exists).
+  #    `or vector(0)` keeps the ratio at 1 instead of returning nothing.
+  - name: checkout availability, good series absent
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="checkout-api",code="500"}'
+        values: '0+100x30'
+    promql_expr_test:
+      - expr: slo:sli_error:ratio_rate5m{service="checkout-api",slo="availability"}
+        eval_time: 10m
+        exp_samples:
+          - labels: 'slo:sli_error:ratio_rate5m{service="checkout-api",slo="availability"}'
+            value: 1
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: CheckoutApiAvailabilityBurnPage1h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: payments
+              tier: page-1h
+              burn_rate: "14.4"
+              long_window: 1h
+              short_window: 5m
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 14.4x or faster (1h and 5m windows)"
+              description: "The 1h error ratio is 100% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 14.4x burn consumes 2% of the 30d budget every 1h and exhausts it in 2.1d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-fast-burn.md"
+
+  # 4. Short-window reset: 30 minutes at 10% errors, then 30 clean minutes.
+  #    At 60m the 1h ratio is still 5% (above 14.4 x 0.1%), but the 5m ratio
+  #    is 0, so the page resolves instead of paging for another half hour.
+  - name: checkout availability, short window resets the page
+    interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="checkout-api",code="200"}'
+        values: '0+900x30 28000+1000x29'
+      - series: 'http_requests_total{job="checkout-api",code="500"}'
+        values: '0+100x30 3000+0x29'
+    promql_expr_test:
+      # 3000 errors in ~60000 requests: about 5% (4.92% after rate() extrapolation).
+      - expr: round(slo:sli_error:ratio_rate1h{service="checkout-api",slo="availability"} * 100)
+        eval_time: 60m
+        exp_samples:
+          - labels: '{service="checkout-api",slo="availability"}'
+            value: 5
+      - expr: slo:sli_error:ratio_rate5m{service="checkout-api",slo="availability"}
+        eval_time: 60m
+        exp_samples:
+          - labels: 'slo:sli_error:ratio_rate5m{service="checkout-api",slo="availability"}'
+            value: 0
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CheckoutApiAvailabilityBurnPage1h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: payments
+              tier: page-1h
+              burn_rate: "14.4"
+              long_window: 1h
+              short_window: 5m
+              service: checkout-api
+              slo: availability
+            exp_annotations:
+              summary: "checkout-api availability SLO: error budget burning at 14.4x or faster (1h and 5m windows)"
+              description: "The 1h error ratio is 10% against an error budget of 0.1% (objective 99.9% over 30d). A sustained 14.4x burn consumes 2% of the 30d budget every 1h and exhausts it in 2.1d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-availability-fast-burn.md"
+      - eval_time: 60m
+        alertname: CheckoutApiAvailabilityBurnPage1h
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: CheckoutApiAvailabilityBurnPage6h
+        exp_alerts: []
+
+  # 5. Latency: 2% of requests slower than 300 ms against a 1% budget = 2x.
+  #    Only the 1x/3d ticket fires; 3x, 6x and 14.4x stay quiet.
+  - name: checkout latency, 2x burn opens only the 1x ticket
+    interval: 1m
+    input_series:
+      - series: 'http_request_duration_seconds_bucket{job="checkout-api",le="0.3"}'
+        values: '0+980x60'
+      - series: 'http_request_duration_seconds_count{job="checkout-api"}'
+        values: '0+1000x60'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: CheckoutApiLatencyBurnTicket3d
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              team: payments
+              tier: ticket-3d
+              burn_rate: "1"
+              long_window: 3d
+              short_window: 6h
+              service: checkout-api
+              slo: latency
+            exp_annotations:
+              summary: "checkout-api latency SLO: error budget burning at 1x or faster (3d and 6h windows)"
+              description: "The 3d error ratio is 2% against an error budget of 1% (objective 99% over 28d). A sustained 1x burn consumes 10.71% of the 28d budget every 3d and exhausts it in 28.0d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/checkout-latency-slow-burn.md"
+      - eval_time: 30m
+        alertname: CheckoutApiLatencyBurnTicket1d
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: CheckoutApiLatencyBurnPage6h
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: CheckoutApiLatencyBurnPage1h
+        exp_alerts: []
+
+  # 6. Orders freshness: 10% of orders older than 5 minutes = 20x a 0.5% budget.
+  - name: orders freshness, 20x burn pages
+    interval: 1m
+    input_series:
+      - series: 'orders_processing_lag_seconds_bucket{job="orders-worker",le="300.0"}'
+        values: '0+90x30'
+      - series: 'orders_processing_lag_seconds_count{job="orders-worker"}'
+        values: '0+100x30'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: OrdersWorkerFreshnessBurnPage1h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: fulfilment
+              tier: page-1h
+              burn_rate: "14.4"
+              long_window: 1h
+              short_window: 5m
+              service: orders-worker
+              slo: freshness
+            exp_annotations:
+              summary: "orders-worker freshness SLO: error budget burning at 14.4x or faster (1h and 5m windows)"
+              description: "The 1h error ratio is 10% against an error budget of 0.5% (objective 99.5% over 28d). A sustained 14.4x burn consumes 2.14% of the 28d budget every 1h and exhausts it in 1.9d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/orders-freshness-fast-burn.md"
+
+  # 7. Website probes: 21 successes (0m..20m) then 10 failures (21m..30m).
+  #    At 30m the 5m window is all failures and the 1h ratio is 10/31.
+  #    group_eval_order (top of the file) makes the alert see this
+  #    evaluation's ratio; without it, it may read the previous one (9/30).
+  - name: website availability from blackbox probes
+    interval: 1m
+    input_series:
+      - series: 'probe_success{job="blackbox-website",instance="https://www.example.com"}'
+        values: '1x20 0x9'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: PublicWebsiteAvailabilityBurnPage1h
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              team: web
+              tier: page-1h
+              burn_rate: "14.4"
+              long_window: 1h
+              short_window: 5m
+              service: public-website
+              slo: availability
+            exp_annotations:
+              summary: "public-website availability SLO: error budget burning at 14.4x or faster (1h and 5m windows)"
+              description: "The 1h error ratio is 32.26% against an error budget of 0.5% (objective 99.5% over 30d). A sustained 14.4x burn consumes 2% of the 30d budget every 1h and exhausts it in 2.1d."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/website-availability-fast-burn.md"
+
+  # 8. The dead man's switch is always firing.
+  - name: watchdog
+    interval: 1m
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: Watchdog
+        exp_alerts:
+          - exp_labels:
+              severity: none
+            exp_annotations:
+              summary: "Dead man's switch: always firing while the alerting pipeline works."
+              description: "Routed to an external heartbeat receiver every minute. If the heartbeat stops, Prometheus, rule evaluation or Alertmanager is broken and the receiver pages."
+              runbook_url: "https://github.com/Salahuddin076/salahuddin-devops-Portfolio/blob/main/projects/observability-sre-platform/runbooks/watchdog.md"

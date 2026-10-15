@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Helm
+helm/observability-stack/charts/
+*.tgz
+
+# Local experiments
+.env
+*.secret
+secrets/

@@ -1,0 +1,24 @@
+{{- range .Values.serviceMonitors }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "obs.labels" $ | nindent 4 }}
+spec:
+  jobLabel: {{ .jobLabel }}
+  namespaceSelector:
+    matchNames:
+      - {{ .namespace }}
+  selector:
+    matchLabels:
+      {{- toYaml .matchLabels | nindent 6 }}
+  endpoints:
+    - port: {{ .port }}
+      path: {{ .path }}
+      interval: {{ .interval }}
+      scheme: http
+      honorLabels: false
+{{- end }}

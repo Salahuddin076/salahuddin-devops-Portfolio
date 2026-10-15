@@ -1,0 +1,21 @@
+{
+  "service": "public-website",
+  "team": "web",
+  "description": "Synthetic marketing website, measured from outside by blackbox probes against https://www.example.com.",
+  "slos": [
+    {
+      "name": "availability",
+      "description": "Share of blackbox probes that succeed. Not revenue-critical, so the 6x/6h page tier is off: a sustained 6x burn opens a ticket through the 1d tier instead of waking someone.",
+      "objective": 99.5,
+      "window": "30d",
+      "sli": {
+        "good": "sum(sum_over_time(probe_success{job=\"blackbox-website\"}[$window]))",
+        "total": "sum(count_over_time(probe_success{job=\"blackbox-website\"}[$window]))"
+      },
+      "alerting": {
+        "runbook": "website-availability",
+        "tiers": ["page-1h", "ticket-1d", "ticket-3d"]
+      }
+    }
+  ]
+}

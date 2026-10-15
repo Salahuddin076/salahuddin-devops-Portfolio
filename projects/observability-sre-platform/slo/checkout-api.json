@@ -1,0 +1,36 @@
+{
+  "service": "checkout-api",
+  "team": "payments",
+  "description": "Synthetic checkout API: takes a basket and creates an order. Revenue-critical, user-facing.",
+  "slos": [
+    {
+      "name": "availability",
+      "description": "Share of checkout requests that do not fail with a 5xx response.",
+      "objective": 99.9,
+      "window": "30d",
+      "sli": {
+        "good": "sum(rate(http_requests_total{job=\"checkout-api\",code!~\"5..\"}[$window]))",
+        "total": "sum(rate(http_requests_total{job=\"checkout-api\"}[$window]))"
+      },
+      "alerting": {
+        "runbook": "checkout-availability",
+        "tiers": ["page-1h", "page-6h", "ticket-1d", "ticket-3d"]
+      },
+      "sample_data": "sample-data/checkout-api-availability-hourly.csv"
+    },
+    {
+      "name": "latency",
+      "description": "Share of checkout requests served in 300 ms or less.",
+      "objective": 99.0,
+      "window": "28d",
+      "sli": {
+        "good": "sum(rate(http_request_duration_seconds_bucket{job=\"checkout-api\",le=\"0.3\"}[$window]))",
+        "total": "sum(rate(http_request_duration_seconds_count{job=\"checkout-api\"}[$window]))"
+      },
+      "alerting": {
+        "runbook": "checkout-latency",
+        "tiers": ["page-1h", "page-6h", "ticket-1d", "ticket-3d"]
+      }
+    }
+  ]
+}

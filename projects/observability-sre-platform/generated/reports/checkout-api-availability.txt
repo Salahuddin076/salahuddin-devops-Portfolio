@@ -1,0 +1,13 @@
+error-budget report: checkout-api/availability (objective 99.9%, window 30d, budget 0.1%)
+input sample-data/checkout-api-availability-hourly.csv: 168 hourly rows, 2026-09-01T00:00:00Z .. 2026-09-08T00:00:00Z (7.0d of the 30d window)
+note: hourly data, so the 5m and 30m short windows use the latest hour, and `for:` is not modelled
+requests 1680000, errors 2194, error ratio 0.1306%
+budget consumed 30.47% (sum of hourly burn rate x 1h / 30d), remaining 69.53%
+burn rate at end: 1h 0.40x  6h 0.40x  1d 0.40x  3d 1.69x
+alerts that would have fired:
+  page-1h   page   >14.4x over 1h and 5m: fired 2026-09-03T13:00:00Z  resolved 2026-09-03T15:00:00Z  (2h, peak 1h burn 30.00x)
+  page-6h   page   >6x over 6h and 30m: fired 2026-09-03T14:00:00Z  resolved 2026-09-03T15:00:00Z  (1h, peak 6h burn 10.27x)
+  ticket-3d ticket >1x over 3d and 6h: fired 2026-09-03T14:00:00Z  resolved 2026-09-03T20:00:00Z  (6h, peak 3d burn 1.35x)
+  ticket-3d ticket >1x over 3d and 6h: fired 2026-09-05T16:00:00Z  resolved 2026-09-07T01:00:00Z  (33h, peak 3d burn 2.17x)
+  ticket-1d ticket >3x over 1d and 2h: fired 2026-09-06T11:00:00Z  resolved 2026-09-06T21:00:00Z  (10h, peak 1d burn 3.50x)
+summary: 5 firing interval(s): 2 page, 3 ticket; tickets that overlap a page for the same SLO are inhibited in Alertmanager

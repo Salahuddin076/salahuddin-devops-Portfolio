@@ -1,0 +1,19 @@
+{{- if .Values.probe.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: {{ .Values.probe.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "obs.labels" . | nindent 4 }}
+spec:
+  jobName: {{ .Values.probe.jobName }}
+  interval: {{ .Values.probe.interval }}
+  module: {{ .Values.probe.module }}
+  prober:
+    url: {{ .Values.probe.proberUrl }}
+  targets:
+    staticConfig:
+      static:
+        {{- toYaml .Values.probe.targets | nindent 8 }}
+{{- end }}

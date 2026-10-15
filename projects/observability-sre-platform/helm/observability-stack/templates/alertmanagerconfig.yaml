@@ -1,0 +1,75 @@
+{{- $am := .Values.alertmanager }}
+# Routing for the generated SLO alerts. No credentials here: every receiver
+# reads its key or URL from the externally managed Secret `{{ $am.receiverSecret }}`.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: {{ $am.configName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "obs.labels" . | nindent 4 }}
+spec:
+  route:
+    receiver: ticket
+    groupBy:
+      {{- toYaml $am.groupBy | nindent 6 }}
+    groupWait: {{ $am.groupWait }}
+    groupInterval: {{ $am.groupInterval }}
+    repeatInterval: {{ $am.repeatInterval }}
+    routes:
+      # Dead man's switch first: the always-firing Watchdog goes to an external
+      # heartbeat receiver every minute; silence from it means alerting is down.
+      - receiver: deadmans-switch
+        matchers:
+          - name: alertname
+            value: Watchdog
+            matchType: "="
+        groupWait: 0s
+        groupInterval: 1m
+        repeatInterval: 1m
+      - receiver: pager
+        matchers:
+          - name: severity
+            value: page
+            matchType: "="
+        groupWait: 10s
+        repeatInterval: {{ $am.pageRepeatInterval }}
+      - receiver: ticket
+        matchers:
+          - name: severity
+            value: ticket
+            matchType: "="
+        repeatInterval: {{ $am.ticketRepeatInterval }}
+  inhibitRules:
+    # A page for an SLO makes its tickets noise: same incident, already handled.
+    - sourceMatch:
+        - name: severity
+          value: page
+          matchType: "="
+      targetMatch:
+        - name: severity
+          value: ticket
+          matchType: "="
+      equal:
+        - service
+        - slo
+  receivers:
+    - name: pager
+      pagerdutyConfigs:
+        - routingKey:
+            name: {{ $am.receiverSecret }}
+            key: {{ $am.pager.routingKeyKey }}
+          sendResolved: true
+          severity: critical
+    - name: ticket
+      webhookConfigs:
+        - urlSecret:
+            name: {{ $am.receiverSecret }}
+            key: {{ $am.ticket.urlKey }}
+          sendResolved: true
+    - name: deadmans-switch
+      webhookConfigs:
+        - urlSecret:
+            name: {{ $am.receiverSecret }}
+            key: {{ $am.deadMansSwitch.urlKey }}
+          sendResolved: false

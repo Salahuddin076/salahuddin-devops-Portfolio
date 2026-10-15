@@ -1,0 +1,118 @@
+# OpenTelemetry Collector (contrib distribution) gateway config.
+# Mounted from a ConfigMap by templates/otel-collector.yaml. Endpoints are
+# placeholders on example.com; credentials would come from env vars set from
+# an externally managed Secret, never from this file.
+#
+# Processor order matters: memory_limiter first (shed load before doing work),
+# then PII scrubbing, then batch last (batch what will actually be exported).
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
+
+  # Applies to span attributes, log record attributes and metric data point
+  # attributes. delete removes the value; hash replaces it with a one-way
+  # hash so it still joins across signals. An unsalted hash of a low-entropy
+  # value (an e-mail address, a phone number) can be reversed by guessing,
+  # so those are deleted, not hashed (ADR 0003).
+  attributes/scrub-pii:
+    actions:
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      - key: http.request.header.set-cookie
+        action: delete
+      - key: user.email
+        action: delete
+      - key: user.phone
+        action: delete
+      - key: user.full_name
+        action: delete
+      - pattern: (?i)^.*(password|passwd|secret|token|api[_.-]?key).*$
+        action: delete
+      - key: enduser.id
+        action: hash
+      - key: user.id
+        action: hash
+      - key: client.address
+        action: hash
+
+  # Strip query strings from URLs: they carry e-mails, tokens and search
+  # terms often enough that keeping them is the wrong default.
+  transform/strip-query:
+    error_mode: ignore
+    trace_statements:
+      - replace_pattern(span.attributes["url.full"], "\\?.*$", "")
+      - replace_pattern(span.attributes["http.url"], "\\?.*$", "")
+    log_statements:
+      - replace_pattern(log.attributes["url.full"], "\\?.*$", "")
+
+  batch:
+    send_batch_size: 8192
+    send_batch_max_size: 16384
+    timeout: 5s
+
+exporters:
+  prometheusremotewrite:
+    endpoint: https://prometheus.example.com/api/v1/write
+    resource_to_telemetry_conversion:
+      enabled: false
+
+  # Loki 3.x ingests OTLP natively; the old contrib `loki` exporter is removed.
+  otlphttp/loki:
+    endpoint: https://loki.example.com/otlp
+
+  otlp/tempo:
+    endpoint: tempo.example.com:4317
+
+service:
+  extensions:
+    - health_check
+  pipelines:
+    metrics:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - attributes/scrub-pii
+        - batch
+      exporters:
+        - prometheusremotewrite
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - attributes/scrub-pii
+        - transform/strip-query
+        - batch
+      exporters:
+        - otlphttp/loki
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - attributes/scrub-pii
+        - transform/strip-query
+        - batch
+      exporters:
+        - otlp/tempo
+  telemetry:
+    metrics:
+      level: normal
