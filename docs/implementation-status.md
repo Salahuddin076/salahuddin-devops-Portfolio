@@ -18,14 +18,14 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | 12 | hybrid-cloud-fintech | Production case study | page only | — | — | Design |
 | 13 | cloud-security-waf-automation | Portfolio implementation | ✅ | 99 ✅ | 3 dirs validate | **Implemented** |
 | 14 | finops-cost-optimization | Portfolio implementation | ✅ | 71 ✅ | 2 dirs validate | **Implemented** |
-| 15 | ai-cloud-operations | Portfolio implementation | page only | — | — | Design |
+| 15 | ai-cloud-operations | Portfolio implementation | ✅ | 66 ✅ | n/a (pure Python, no terraform/k8s) | **Implemented** |
 | 16 | aws-codepipeline-container-delivery | Portfolio implementation | ✅ | 39 ✅ | 2 dirs validate · Docker image built and run | **Implemented** |
 | 17 | aws-backup-cross-region-dr | Portfolio implementation | ✅ | 118 ✅ | 2 dirs validate | **Implemented** |
 | 18 | cloudfront-s3-static-delivery | Portfolio implementation | ✅ | 129 ✅ | 3 dirs validate · edge function run under Node | **Implemented** |
 | 19 | ecs-fargate-blue-green | Portfolio implementation | ✅ | 105 ✅ | 6 dirs validate · arm64 image built and run | **Implemented** |
 | 20 | eks-secrets-store-csi | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate · kubeconform strict incl. CRD schema | **Implemented** |
 
-**15 implemented, 5 design.** In total: 1,296 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03 was verified individually on 2026-10-19. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS.
+**16 implemented, 4 design.** In total: 1,362 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03 and 15 were each verified individually on 2026-10-19. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS.
 
 Projects 16–20 were added in session 3. At the owner's request they are all labeled portfolio implementations, and they are numbered in the order they were completed.
 

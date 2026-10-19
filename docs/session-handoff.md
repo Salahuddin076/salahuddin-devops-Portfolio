@@ -8,8 +8,9 @@ Owner approved the blockers pending since session 1:
 - **K4**: experience figure changed 7+ → 9+ years across the website (`resume.ts`, `layout.tsx` metadata, `Experience.tsx`, `Skills.tsx`). `public/resume.pdf` is a static binary with no source in the repo and still says 7+ — flagged to the owner to update separately.
 - **K2**: `thedusttest-iac`'s committed prod `tfplan` (a zip bundling `tfstate`/`tfstate-prev` with real AWS account IDs and a Secrets Manager `secret_string`) was purged from all git history with `git-filter-repo`, force-pushed, and the repo flipped to private. The actual secret value couldn't be inspected (agent sandbox blocked reading credential material from the state file), so the owner should confirm whether it needs rotating.
 - **Project 03 (graviton-arm64-migration) implemented** (`77eec05`): built by a subagent, independently re-verified (45 tests, 3 terraform dirs validate, helm lint + kubeconform strict for stable and canary, workflow linter 0/0), website page updated (`c9e8534`). ECS Fargate was dropped from the stack list — only EKS node groups were built, since Fargate IaC already exists in project 19 and wasn't part of this project's scheduling-based migration story.
+- **Project 15 (ai-cloud-operations) implemented** (`51755b3`): a pure-stdlib Python pipeline — rolling-baseline z-score anomaly detection, deploy/alert correlation, a no-op-default LLM provider interface (zero network calls/API keys unless a caller wires one in), redaction before any external call, and an allow-listed remediation flow with an append-only audit log. Independently re-verified: 66 tests, workflow linter 0/0, and the allow-list/append-only/no-op guarantees confirmed by reading `aiops/audit.py`, `aiops/remediation.py` and `aiops/llm.py` directly rather than trusting the build agent's description. Website page updated (`a288f1f`); Slack/email adapters dropped from the stack list since only a CLI was built.
 
-**State now: 15 implemented, 5 design-only (07, 08, 09, 12, 15).**
+**State now: 16 implemented, 4 design-only (07, 08, 09, 12).**
 
 ### Next
 See `docs/next-session-prompt.md` (being updated now).
