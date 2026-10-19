@@ -2,12 +2,12 @@
 
 | # | Issue | Impact | Owner action |
 |---|---|---|---|
-| K1 | Live site still serves the confidential diagrams (S1–S3 in `audit/initial-audit.md`) until the website is redeployed | Account/VPC IDs and client names publicly visible | Approve website push/deploy |
-| K2 | `thedusttest-iac` public repo has a committed prod `tfplan` | Possible plaintext secrets | Inspect, remove, consider making private, rotate if needed |
-| K3 | This repo is not public, so project pages show "will be linked once published" instead of GitHub links | Reviewers can't see code yet | Approve publishing, then set `examplesRepoPublic: true` in the website's `src/lib/site.ts` |
-| K4 | Experience number: CV says 7+, dates give ~9 years | Underselling | Decide 7+ vs 9+ |
+| K1 | ~~Live site served the confidential diagrams~~ resolved 2026-10-19: owner approved push/deploy, website merged to `main` | — | — |
+| K2 | ~~`thedusttest-iac` public repo had a committed prod `tfplan`~~ resolved 2026-10-19: owner chose to purge history. The file (and the `tfstate`/`tfstate-prev` it bundled, containing real account IDs and a Secrets Manager `secret_string` field) was stripped from every commit with `git-filter-repo`, force-pushed, and the repo was flipped to private | Possible plaintext secrets — the actual secret value couldn't be inspected (blocked by the agent sandbox), so rotation is still worth confirming | Owner: consider rotating whatever secret backed that `secret_string` if it was ever live |
+| K3 | ~~This repo wasn't public~~ resolved 2026-10-19: confirmed already public on GitHub; `examplesRepoPublic` flipped to `true` in the website's `src/lib/site.ts` | — | — |
+| K4 | ~~Experience number: CV said 7+, dates give ~9 years~~ resolved 2026-10-19: owner chose 9+, updated across the site (resume.ts, layout metadata, Experience/Skills copy) | `public/resume.pdf` is a static binary with no source file in the repo and still says 7+ | Owner: re-export/update the resume PDF separately |
 | K5 | gstack is installed but not yet used for QA; agent-skills is not installed as a plugin | QA so far via headless Chrome/CDP | Use `/qa` next session |
-| K6 | No OG image; CSP needs `'unsafe-inline'` for scripts (static site, no nonces) | Minor | Phase 9: add OG image; revisit CSP hashes |
+| K6 | ~~No OG image~~ resolved in session 3 continuation (`25eb40c`). CSP still needs `'unsafe-inline'` for scripts (static site, no nonces) | Minor | Revisit CSP hashes |
 | K7 | ~~helm, kubeconform missing~~ resolved in session 3 (helm 4.3.0, kubeconform 0.8.0; install with `HOMEBREW_NO_AUTO_UPDATE=1`). tflint, trivy and checkov are still not installed locally | — | Optional |
 | K8 | AWS provider 6.x download takes ~13 min here | Slow first validate | Keep `TF_PLUGIN_CACHE_DIR=~/.terraform.d/plugin-cache` (now holds 6.68.0) |
 | K9 | No project has been deployed. Each README lists the AWS behaviours that are unverified (IAM sufficiency, a few API semantics, add-on config keys) | Expected for a no-spend portfolio | Sandbox-account acceptance if the owner wants it |
