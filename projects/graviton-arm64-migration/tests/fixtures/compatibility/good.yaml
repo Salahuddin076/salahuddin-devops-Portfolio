@@ -1,0 +1,46 @@
+services:
+  checkout-api:
+    rollout:
+      stage: canary
+    platforms:
+      linux/amd64:
+        base_image: "python:3.12-slim@sha256:036fd67ef31b6cf9bbc378be9e0aa0f1c4c24b0486d91ec4c4f32050c58e4922"
+        build_method: native
+        runtime_version: "3.12.6"
+        native_modules: ["psycopg2-binary"]
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+      linux/arm64:
+        base_image: "python:3.12-slim@sha256:8fb3b940e9878bfef271d71e2261f775f3704987fcd29745fdbfa32e20a89203"
+        build_method: native
+        runtime_version: "3.12.6"
+        native_modules: ["psycopg2-binary"]
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+
+  reporting-job:
+    rollout:
+      stage: design
+    platforms:
+      linux/amd64:
+        base_image: "golang:1.23-bookworm@sha256:da3b2ed6b05e0c65e188075cdd1f5bac811ec84109c6bc35bbe625990e048e95"
+        build_method: native
+        runtime_version: "1.23.4"
+        native_modules: []
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+      linux/arm64:
+        base_image: "golang:1.23-bookworm@sha256:bbb4c9a6586bdc8d6b9ab81bf3bf2c4b5fbee6f7e6dfeb93bb21762ca5246200"
+        build_method: native
+        runtime_version: "1.23.4"
+        native_modules: []
+        image_scan:
+          status: pending
+          critical: 0
+          high: 0

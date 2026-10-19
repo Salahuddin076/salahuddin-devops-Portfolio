@@ -1,0 +1,22 @@
+region       = "us-east-1"
+environment  = "dev"
+cluster_name = "example-cluster"
+
+subnet_ids = [
+  "subnet-0aaaaaaaaaaaaaaaa",
+  "subnet-0bbbbbbbbbbbbbbbb",
+]
+
+node_pools = {
+  x86-stable = {
+    architecture    = "amd64"
+    scaling_config  = { min_size = 2, desired_size = 3, max_size = 6 }
+  }
+  graviton-migration = {
+    architecture    = "arm64"
+    scaling_config  = { min_size = 1, desired_size = 2, max_size = 6 }
+    capacity_type   = "SPOT"
+  }
+}
+
+ecr_repository_name = "example/checkout-api"

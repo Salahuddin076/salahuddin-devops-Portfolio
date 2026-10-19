@@ -1,0 +1,84 @@
+// Synthetic Jenkinsfile: build a multi-arch manifest list with native agents
+// per architecture, instead of one agent cross-building under QEMU
+// (docs/decisions/0001-native-arm64-build-agents.md). Never executed in this
+// repo -- CI for this project runs in GitHub Actions
+// (.github/workflows/graviton-arm64-migration.yml); this file documents the
+// Jenkins-agent-label pattern the stack's README and the website both
+// reference.
+
+pipeline {
+  agent none
+
+  parameters {
+    string(name: 'IMAGE_REPO', defaultValue: 'example/checkout-api', description: 'ECR repository name')
+    string(name: 'IMAGE_TAG', defaultValue: 'dev', description: 'Tag to publish as a multi-arch manifest list')
+  }
+
+  environment {
+    ECR_REGISTRY = '123456789012.dkr.ecr.us-east-1.amazonaws.com'
+  }
+
+  stages {
+    stage('Build per architecture') {
+      parallel {
+        stage('amd64') {
+          // Any standard x86_64 agent. No emulation needed: this is the
+          // platform the agent itself runs on.
+          agent { label 'docker && amd64' }
+          steps {
+            sh '''
+              set -euo pipefail
+              docker buildx build \
+                --platform linux/amd64 \
+                --tag "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG-amd64" \
+                --push .
+            '''
+          }
+        }
+        stage('arm64') {
+          // A native Graviton agent (EC2 m7g/c7g, or a Graviton-backed CI
+          // runner) -- not a QEMU leg on an amd64 agent. See the
+          // compatibility checklist for why: native_modules builds under
+          // emulation can succeed while producing a binary that misbehaves
+          // only on real arm64 hardware.
+          agent { label 'docker && arm64 && graviton' }
+          steps {
+            sh '''
+              set -euo pipefail
+              docker buildx build \
+                --platform linux/arm64 \
+                --tag "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG-arm64" \
+                --push .
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Publish multi-arch manifest list') {
+      // Either agent can run this: it only talks to the registry, merging
+      // the two platform-specific pushes above into one manifest-list tag.
+      // This is the tag the Helm chart's image.tag actually references --
+      // the per-arch "-amd64"/"-arm64" tags above are build-time
+      // intermediates, never referenced by a Deployment.
+      agent { label 'docker' }
+      steps {
+        sh '''
+          set -euo pipefail
+          docker buildx imagetools create \
+            --tag "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG" \
+            "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG-amd64" \
+            "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG-arm64"
+          docker buildx imagetools inspect "$ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG"
+        '''
+      }
+    }
+
+    stage('Compatibility gate') {
+      agent { label 'docker' }
+      steps {
+        sh 'python3 scripts/compatibility_check.py --fail-on warning'
+      }
+    }
+  }
+}

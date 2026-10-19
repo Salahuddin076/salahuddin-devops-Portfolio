@@ -1,0 +1,18 @@
+{{ include "multiarch-app.fullname" . }} is scheduled on architecture "{{ .Values.architecture }}"
+({{ .Values.replicaCount }} replica(s), nodeSelector kubernetes.io/arch={{ .Values.architecture }}).
+
+{{- if .Values.canary.enabled }}
+A Graviton canary pool is enabled: {{ .Values.canary.replicaCount }} replica(s) on
+"{{ .Values.canary.architecture }}", sharing this release's Service with the stable pool
+(a replica-count canary, not a weighted traffic split).
+{{- else }}
+No canary pool is enabled.
+{{- end }}
+
+Rollback, no image rebuild:
+  helm upgrade {{ .Release.Name }} <chart> --reuse-values --set canary.enabled=false
+  helm upgrade {{ .Release.Name }} <chart> --reuse-values --set architecture=amd64
+
+Both are scheduling-only changes: the image tag is an ECR multi-arch manifest
+list, so the same tag already resolves correctly on whichever pool a pod
+lands on.

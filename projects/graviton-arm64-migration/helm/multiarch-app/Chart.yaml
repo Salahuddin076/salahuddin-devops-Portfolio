@@ -1,0 +1,16 @@
+apiVersion: v2
+name: multiarch-app
+description: Synthetic service scheduled by CPU architecture (nodeSelector/affinity on kubernetes.io/arch) with an optional small Graviton canary pool, so moving work between x86 and arm64 is a scheduling change, not a rebuild.
+type: application
+version: 0.1.0
+appVersion: "1.4.0"
+kubeVersion: ">=1.30.0-0"
+keywords:
+  - graviton
+  - arm64
+  - multi-arch
+  - eks
+  - canary
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

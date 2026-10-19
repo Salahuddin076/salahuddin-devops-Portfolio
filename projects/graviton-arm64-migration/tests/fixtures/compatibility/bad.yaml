@@ -1,0 +1,41 @@
+services:
+  # Missing linux/arm64 entirely (GC001), amd64 unpinned (GC002), scan status
+  # invalid (GC003).
+  legacy-batch:
+    rollout:
+      stage: design
+    platforms:
+      linux/amd64:
+        base_image: "ubuntu:22.04"
+        build_method: native
+        runtime_version: "3.11.0"
+        native_modules: []
+        image_scan:
+          status: unknown
+
+  # Both base images are correctly pinned, isolating these findings: a
+  # "pass" status that still has scan findings (GC005), qemu with native
+  # modules (GC006+GC007), a failing scan at canary stage (GC004), and a
+  # runtime mismatch with no note (GC008).
+  image-resizer:
+    rollout:
+      stage: canary
+    platforms:
+      linux/amd64:
+        base_image: "python:3.11-slim@sha256:322a3a030f5232134fd982fb729b560d98522608ada826d3a11c7c15fbcfcc40"
+        build_method: native
+        runtime_version: "3.11.6"
+        native_modules: ["pillow"]
+        image_scan:
+          status: pass
+          critical: 1
+          high: 2
+      linux/arm64:
+        base_image: "python:3.11-slim@sha256:a4cfc45e230cba70d01eaeb3b24e5f1380684b9911dc079f454fcfc82a48d7c0"
+        build_method: qemu
+        runtime_version: "3.12.1"
+        native_modules: ["pillow"]
+        image_scan:
+          status: fail
+          critical: 0
+          high: 0

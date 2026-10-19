@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multiarch-app.fullname" . }}-stable
+  labels:
+    {{- include "multiarch-app.labels" . | nindent 4 }}
+    app.kubernetes.io/pool: stable
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "multiarch-app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/pool: stable
+  template:
+    metadata:
+      labels:
+        {{- include "multiarch-app.labels" . | nindent 8 }}
+        app.kubernetes.io/pool: stable
+    spec:
+      serviceAccountName: {{ include "multiarch-app.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        {{- include "multiarch-app.podSecurityContext" . | nindent 8 }}
+      # kubernetes.io/arch is set natively by EKS from the AMI, so this
+      # selector is the only thing that ties a pod to an architecture. Remove
+      # it (or flip it to "amd64") and the next rollout schedules back onto
+      # the x86 pool -- the whole rollback, no image change.
+      nodeSelector:
+        kubernetes.io/arch: {{ .Values.architecture | quote }}
+      affinity:
+        {{- include "multiarch-app.archAffinity" (dict "arch" .Values.architecture "preferred" .Values.affinity.preferred) | nindent 8 }}
+      {{- with .Values.nodeToleration }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "multiarch-app.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/pool: stable
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+            - name: POOL
+              value: stable
+            - name: ARCH
+              value: {{ .Values.architecture | quote }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- include "multiarch-app.containerSecurityContext" . | nindent 12 }}

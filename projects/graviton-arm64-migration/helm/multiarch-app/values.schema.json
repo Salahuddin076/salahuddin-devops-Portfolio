@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "replicaCount", "serviceAccount", "architecture", "affinity", "canary", "resources", "podDisruptionBudget"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "tag": {"type": "string", "minLength": 1, "not": {"enum": ["latest"]}},
+        "pullPolicy": {"enum": ["IfNotPresent", "Always", "Never"]}
+      }
+    },
+    "replicaCount": {"type": "integer", "minimum": 1},
+    "serviceAccount": {
+      "type": "object",
+      "required": ["create"],
+      "properties": {
+        "create": {"type": "boolean"},
+        "name": {"type": "string"}
+      }
+    },
+    "architecture": {"enum": ["amd64", "arm64"]},
+    "affinity": {
+      "type": "object",
+      "required": ["preferred"],
+      "properties": {
+        "preferred": {"type": "boolean"}
+      }
+    },
+    "nodeToleration": {"type": "array"},
+    "canary": {
+      "type": "object",
+      "required": ["enabled", "architecture", "replicaCount"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "architecture": {"enum": ["amd64", "arm64"]},
+        "replicaCount": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": {"type": "object", "required": ["cpu", "memory"]},
+        "limits": {"type": "object", "required": ["memory"]}
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "required": ["enabled", "minAvailable"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "minAvailable": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

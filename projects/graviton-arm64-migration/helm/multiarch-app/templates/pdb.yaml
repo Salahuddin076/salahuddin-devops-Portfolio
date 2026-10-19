@@ -1,0 +1,16 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "multiarch-app.fullname" . }}
+  labels:
+    {{- include "multiarch-app.labels" . | nindent 4 }}
+spec:
+  # Scoped to both pools together (no "pool" label), matching the Service:
+  # draining a node in either pool during the migration can't take minAvailable
+  # pods below this floor, counting stable and canary pods as one budget.
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "multiarch-app.selectorLabels" . | nindent 6 }}
+{{- end }}

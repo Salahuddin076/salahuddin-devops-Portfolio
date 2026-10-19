@@ -1,0 +1,72 @@
+# multiarch-app: one image tag (a multi-arch manifest list in ECR), two
+# possible node pools. Everything below that decides *where* a pod lands is
+# scheduling, not image selection -- the registry already resolved the right
+# platform's layer when the node pulled the tag.
+
+image:
+  # A manifest list: linux/amd64 and linux/arm64 behind one tag. Never
+  # "latest" (values.schema.json rejects it) -- pin the tag so "which image is
+  # running on which pool" is answerable from `kubectl describe`.
+  repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/example/checkout-api
+  tag: "1.4.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+serviceAccount:
+  create: true
+  name: ""
+
+containerPort: 8080
+
+service:
+  port: 80
+
+# The stable pool's architecture. This is the rollback switch: set it back to
+# "amd64" (or disable canary below) and the next `helm upgrade` moves every
+# pod off Graviton without touching the image or the ECR tag.
+architecture: amd64
+
+affinity:
+  # Preferred (soft) by default: a pod still schedules if the preferred
+  # architecture's pool is briefly at capacity, instead of going Pending.
+  # Set to false once a pool's compatibility sign-off makes "never schedule
+  # on the wrong architecture" the safer failure mode.
+  preferred: true
+
+# Tolerations for a node pool taint while it's still under compatibility
+# testing (see terraform's optional node-group taint). Empty once sign-off
+# removes the taint.
+nodeToleration: []
+
+# A separate, small Graviton Deployment that shares the stable Deployment's
+# Service (same selector labels, no "pool" label on the Service side), so it
+# receives a share of traffic proportional to its replica count -- a
+# replica-count canary, not a weighted traffic split. See
+# docs/operations.md for the rollout sequence and its limits.
+canary:
+  enabled: false
+  architecture: arm64
+  replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+probes:
+  readiness:
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 10
+    failureThreshold: 3
+
+podDisruptionBudget:
+  enabled: true
+  # Covers both pools together (one Service, one availability budget) so a
+  # node drain during the migration can't take the whole app down even while
+  # pods are moving between pools.
+  minAvailable: 1

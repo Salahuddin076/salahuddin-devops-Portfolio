@@ -1,0 +1,52 @@
+# Per-service compatibility record, checked by scripts/compatibility_check.py.
+# One entry per service that has started the migration; a service not listed
+# here hasn't been assessed yet (see docs/compatibility-checklist.md).
+
+services:
+  checkout-api:
+    # design -> native-agents -> canary -> partial -> complete. See
+    # docs/operations.md for what moves a service between stages.
+    rollout:
+      stage: canary
+    platforms:
+      linux/amd64:
+        base_image: "python:3.12-slim@sha256:036fd67ef31b6cf9bbc378be9e0aa0f1c4c24b0486d91ec4c4f32050c58e4922"
+        build_method: native
+        runtime_version: "3.12.6"
+        native_modules: ["psycopg2-binary", "cryptography"]
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+      linux/arm64:
+        base_image: "python:3.12-slim@sha256:8fb3b940e9878bfef271d71e2261f775f3704987fcd29745fdbfa32e20a89203"
+        build_method: native
+        runtime_version: "3.12.6"
+        native_modules: ["psycopg2-binary", "cryptography"]
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+
+  notification-worker:
+    rollout:
+      stage: native-agents
+    platforms:
+      linux/amd64:
+        base_image: "node:20-bookworm-slim@sha256:fd653e03e52a7e4515577479ddd51f7e14280db37d7b7444a579782fd6840134"
+        build_method: native
+        runtime_version: "20.18.1"
+        native_modules: ["sharp"]
+        image_scan:
+          status: pass
+          critical: 0
+          high: 0
+      linux/arm64:
+        base_image: "node:20-bookworm-slim@sha256:edffb2c4f367d9036fe6b358cfcb7c3c4335262215d03875536ce815348203db"
+        build_method: native
+        runtime_version: "20.18.1"
+        native_modules: ["sharp"]
+        image_scan:
+          status: pending
+          critical: 0
+          high: 0
