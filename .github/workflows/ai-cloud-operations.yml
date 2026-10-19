@@ -1,0 +1,68 @@
+name: ai-cloud-operations
+
+on:
+  push:
+    paths:
+      - "projects/ai-cloud-operations/**"
+      - ".github/workflows/ai-cloud-operations.yml"
+  pull_request:
+    paths:
+      - "projects/ai-cloud-operations/**"
+      - ".github/workflows/ai-cloud-operations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-cloud-operations-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: projects/ai-cloud-operations
+
+jobs:
+  python-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Unit tests (stdlib unittest, no dependencies)
+        run: python -m unittest discover -s tests -v
+      - name: Sample data is reproducible from the seed
+        run: |
+          python -m aiops generate --out sample-data --seed 11
+          git diff --exit-code -- sample-data
+
+  pipeline-smoke:
+    name: Run the pipeline end to end
+    runs-on: ubuntu-latest
+    needs: python-tests
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Analyze, correlate, summarize and propose against sample data
+        run: python -m aiops run --input sample-data --out out --format json
+      - name: Approve the sample proposal and print the audit trail
+        run: |
+          id=$(python -c "import json; print(json.load(open('out/proposals.json'))[0]['id'])")
+          python -m aiops approve --out out --id "$id" --actor ci-smoke-test@example.com
+          python -m aiops audit --out out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: aiops-audit-log
+          path: projects/ai-cloud-operations/out/
+          retention-days: 14
+          if-no-files-found: error

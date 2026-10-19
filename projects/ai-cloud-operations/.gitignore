@@ -1,0 +1,6 @@
+# Python
+__pycache__/
+*.pyc
+
+# Generated reports / audit output from manual runs
+out/
