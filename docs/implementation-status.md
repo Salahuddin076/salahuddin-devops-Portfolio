@@ -10,12 +10,12 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | 04 | aws-landing-zone | Production case study | ✅ | 130 ✅ | 10 dirs validate | **Implemented** |
 | 05 | gitops-delivery-platform | Production case study | ✅ | 85 ✅ | kubeconform strict per env + Argo CD/Rollouts CRDs · policy check · 2 workflows lint 0/0 | **Implemented** |
 | 06 | devsecops-pipeline | Production case study | ✅ | 52 ✅ | workflow lint 0/0; scanners run locally via Docker | **Implemented** |
-| 07 | gcp-ai-pharmacy-platform | Production case study | page only | — | — | Design |
-| 08 | azure-aks-platform | Reference architecture | page only | — | — | Design |
-| 09 | multi-cloud-kubernetes | Reference architecture | page only | — | — | Design |
+| 07 | gcp-ai-pharmacy-platform | Production case study | ✅ | 41 ✅ | 7 dirs validate (first pull of google provider) · helm lint + kubeconform strict 5/5 (api) + 5/5 (ai) | **Implemented** |
+| 08 | azure-aks-platform | Reference architecture | ✅ | 46 ✅ | 7 dirs validate (first pull of azurerm/azuread) · helm lint + kubeconform strict 4/4 | **Implemented** |
+| 09 | multi-cloud-kubernetes | Reference architecture | ✅ | 51 ✅ | 2 dirs validate · helm lint + kubeconform strict 6/6 per cloud overlay (×3) · argocd/ kubeconform strict 2/2 | **Implemented** |
 | 10 | aws-serverless-event-driven | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate | **Implemented** |
 | 11 | observability-sre-platform | Production case study | ✅ | 79 ✅ | promtool check + 8 rule tests, amtool, otelcol validate (agent-run via Docker) · kubeconform strict incl. CRDs | **Implemented** |
-| 12 | hybrid-cloud-fintech | Production case study | page only | — | — | Design |
+| 12 | hybrid-cloud-fintech | Production case study | ✅ | 40 ✅ | 3 dirs validate · ansible-lint "production" profile 0/0 | **Implemented** |
 | 13 | cloud-security-waf-automation | Portfolio implementation | ✅ | 99 ✅ | 3 dirs validate | **Implemented** |
 | 14 | finops-cost-optimization | Portfolio implementation | ✅ | 71 ✅ | 2 dirs validate | **Implemented** |
 | 15 | ai-cloud-operations | Portfolio implementation | ✅ | 66 ✅ | n/a (pure Python, no terraform/k8s) | **Implemented** |
@@ -25,7 +25,7 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | 19 | ecs-fargate-blue-green | Portfolio implementation | ✅ | 105 ✅ | 6 dirs validate · arm64 image built and run | **Implemented** |
 | 20 | eks-secrets-store-csi | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate · kubeconform strict incl. CRD schema | **Implemented** |
 
-**16 implemented, 4 design.** In total: 1,362 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03 and 15 were each verified individually on 2026-10-19. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS.
+**20 implemented, 0 design — all projects implemented.** In total: 1,474 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03, 15, 07, 08, 09 and 12 were each verified individually on 2026-10-19/20. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS/Azure/GCP/VMware. A full regression run across all 20 projects has not been re-run end to end since the last additions — only each new project individually.
 
 Projects 16–20 were added in session 3. At the owner's request they are all labeled portfolio implementations, and they are numbered in the order they were completed.
 
