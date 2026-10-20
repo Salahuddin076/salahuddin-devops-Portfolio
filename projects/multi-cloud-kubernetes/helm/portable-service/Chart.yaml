@@ -1,0 +1,24 @@
+apiVersion: v2
+name: portable-service
+description: >-
+  Synthetic stateless service deployed unmodified to EKS, AKS and GKE from one
+  chart. Only three things differ per cloud, via a values overlay -- the
+  ingress controller's class/annotations, the ServiceAccount's
+  workload-identity annotation, and the StorageClass name. Everything else
+  (image, replicas, probes, resources, PodDisruptionBudget) is identical,
+  which is the point -- the workload is portable, the platform layer
+  underneath it is not.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+kubeVersion: ">=1.30.0-0"
+keywords:
+  - multi-cloud
+  - eks
+  - aks
+  - gke
+  - workload-identity
+  - portability
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

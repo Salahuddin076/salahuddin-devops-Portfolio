@@ -1,0 +1,55 @@
+# Structured comparison data, rendered to a table by scripts/render_comparison.py
+# and checked for completeness by tests/test_comparison.py. This is the
+# reference-evidence artifact for this project: a documented, testable
+# comparison of what genuinely differs between managed Kubernetes offerings,
+# not a claim that any of it is abstracted away. Figures are illustrative
+# (public list pricing/support-window structure as of writing, not a quote)
+# -- see each row's `note`.
+clouds:
+  - id: eks
+    name: Amazon EKS
+  - id: aks
+    name: Azure AKS
+  - id: gke
+    name: Google GKE
+
+dimensions:
+  - id: control_plane_pricing
+    label: Control plane pricing model
+    values:
+      eks: "Flat hourly fee per cluster (~$0.10/hr), plus one Fargate/EC2 node fee per worker."
+      aks: "Free tier control plane by default; paid 'Standard'/'Premium' tiers add an SLA and longer support."
+      gke: "One free zonal cluster per billing account; Autopilot and additional/regional clusters bill a flat per-hour management fee."
+    note: "Illustrative, public list-price structure, not a quote -- see docs/cost.md."
+
+  - id: upgrade_cadence
+    label: Upgrade cadence / support window
+    values:
+      eks: "~4 minor versions supported at a time; ~14 months standard support, paid extended support beyond that."
+      aks: "~2 latest GA minor versions supported ('N-2'); platform can auto-upgrade on a maintenance window."
+      gke: "Multiple release channels (Rapid/Regular/Stable) with Google-managed auto-upgrade; the channel chosen sets the support window."
+    note: "Each cloud ties this to its own release-channel/support-tier concept -- they are not directly fungible policies."
+
+  - id: networking_mode
+    label: Networking mode / CNI
+    values:
+      eks: "VPC CNI by default: pods get real VPC IPs from the subnet's address space (IP-address-hungry at scale)."
+      aks: "Azure CNI Overlay by default: pods get overlay IPs independent of the VNet's address space; classic Azure CNI (VNet IPs) remains available."
+      gke: "VPC-native (alias IP ranges) by default: pods get IPs from a dedicated secondary range, not the primary VPC range."
+    note: "All three are 'pods get routable-enough IPs for the cluster's own service mesh/network policy to work' -- the exhaustion failure mode and the subnet planning it demands differ."
+
+  - id: ingress_convention
+    label: Ingress controller convention
+    values:
+      eks: "AWS Load Balancer Controller provisions an ALB per Ingress (ingressClassName: alb); IRSA grants it ELB/EC2 permissions."
+      aks: "Application Gateway Ingress Controller (AGIC) or the built-in App Routing add-on (ingressClassName: azure-application-gateway or webapprouting.kubernetes.azure.com)."
+      gke: "GKE Ingress-for-Anthos/the GCE controller provisions an external HTTP(S) load balancer (ingressClassName: gce)."
+    note: "This is exactly the field helm/portable-service's three values overlays set differently -- see that chart's values-eks.yaml / values-aks.yaml / values-gke.yaml."
+
+  - id: logging_integration
+    label: Logging / monitoring integration
+    values:
+      eks: "Control-plane log types opted into CloudWatch Logs individually; node/pod logs need Fluent Bit (or the CloudWatch agent) shipped explicitly."
+      aks: "Container insights (Azure Monitor) is an add-on; control-plane diagnostic categories stream to a Log Analytics workspace once enabled."
+      gke: "Cloud Logging/Monitoring is on by default for both the control plane and workloads unless explicitly disabled."
+    note: "The default-on vs. opt-in split matters operationally: a fresh GKE cluster already has workload logs; a fresh EKS or AKS cluster does not until the add-on/opt-in is configured."

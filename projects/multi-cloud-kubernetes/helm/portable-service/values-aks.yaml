@@ -1,0 +1,20 @@
+# Azure overlay: `helm install portable-service helm/portable-service -f values.yaml -f values-aks.yaml`.
+# Touches only ingress, the ServiceAccount's Entra Workload ID annotation and
+# the storage class -- see values.yaml's header comment for why nothing else
+# belongs here.
+
+ingress:
+  className: azure-application-gateway
+  annotations:
+    appgw.ingress.kubernetes.io/backend-protocol: http
+
+serviceAccount:
+  annotations:
+    # Microsoft Entra Workload ID: AKS's admission webhook projects a
+    # federated token for this managed identity's client ID (see
+    # terraform/modules/identity-bindings/azure.tf). No client secret or
+    # certificate is ever created or mounted.
+    azure.workload.identity/client-id: "00000000-0000-0000-0000-000000000000"
+
+storage:
+  className: managed-csi

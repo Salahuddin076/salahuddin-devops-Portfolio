@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars and fill in real (non-production, dedicated)
+# values if you ever actually apply this. Never commit terraform.tfvars.
+azure_subscription_id = "00000000-0000-0000-0000-000000000000"
+azure_tenant_id       = "11111111-1111-1111-1111-111111111111"
+gcp_project_id        = "example-multi-cloud"

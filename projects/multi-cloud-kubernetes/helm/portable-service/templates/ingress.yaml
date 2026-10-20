@@ -1,0 +1,33 @@
+{{- if .Values.ingress.enabled }}
+# The ingress controller's class/annotations are the first of the three
+# cloud-specific fields this chart carries -- alb / azure-application-gateway
+# / gce, each with that controller's own annotation vocabulary. Everything
+# else about the Ingress object is identical.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "portable-service.name" . }}
+  labels:
+    {{- include "portable-service.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecretName }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "portable-service.name" . }}
+                port:
+                  name: http
+{{- end }}

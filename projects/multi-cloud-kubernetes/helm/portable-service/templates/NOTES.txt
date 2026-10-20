@@ -1,0 +1,7 @@
+portable-service deployed as {{ .Release.Name }} in {{ .Release.Namespace }}.
+
+This is the SAME chart used on EKS, AKS and GKE -- only the values overlay
+passed with `-f` differs (values-eks.yaml / values-aks.yaml / values-gke.yaml).
+Check `kubectl get ingress,pvc,sa {{ include "portable-service.name" . }}*`
+and confirm the ingress class, ServiceAccount annotation and StorageClass
+name match the cloud you deployed to.

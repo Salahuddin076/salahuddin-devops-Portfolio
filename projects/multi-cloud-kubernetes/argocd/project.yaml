@@ -1,0 +1,24 @@
+# AppProject scoping the three Applications the ApplicationSet above creates.
+# Deliberately narrow: one source repo, one allowed Helm path, no
+# cluster-scoped resources -- a compromised or misconfigured Application for
+# one cloud can't reach into cluster-wide objects or a different repo.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portable-service
+  namespace: argocd
+spec:
+  description: Portable workload deployed identically to EKS, AKS and GKE.
+  sourceRepos:
+    - https://github.com/example-org/multi-cloud-kubernetes.git
+  destinations:
+    - name: eks-prod
+      namespace: portable-service
+    - name: aks-prod
+      namespace: portable-service
+    - name: gke-prod
+      namespace: portable-service
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

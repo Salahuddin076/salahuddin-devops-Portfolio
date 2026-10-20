@@ -1,0 +1,67 @@
+# Base values shared by every cloud. The three overlays (values-eks.yaml,
+# values-aks.yaml, values-gke.yaml) touch ONLY the fields that are genuinely
+# cloud-specific: ingress.className/annotations, serviceAccount.annotations,
+# and storage.className. Everything below -- image, replica count, resources,
+# probes, PodDisruptionBudget -- is identical across clouds by design;
+# tests/test_helm_static.py asserts the overlays never diverge on anything
+# else. That's what "one deployment model" means in practice: a diff of the
+# three overlay files should read like a diff of IAM/ingress/storage config,
+# not a diff of the application.
+
+image:
+  # Synthetic registry path; any cloud's registry works since the chart never
+  # hard-codes a cloud-specific pull mechanism (no ECR/ACR/Artifact Registry
+  # helper).
+  repository: example-registry.local/portable-service
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+containerPort: 8080
+
+service:
+  port: 80
+
+serviceAccount:
+  create: true
+  # Same name in every cluster -- this is what lets one chart's
+  # serviceaccount.yaml work unmodified everywhere, and what the three
+  # terraform/modules/identity-bindings resource sets all bind to by name.
+  name: portable-service
+  # Populated per cloud by the matching overlay below. Left empty here so a
+  # `helm template` of the base values alone renders a ServiceAccount with no
+  # workload-identity annotation at all, rather than a wrong one.
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+probes:
+  readiness:
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 10
+    failureThreshold: 3
+
+podDisruptionBudget:
+  minAvailable: 2
+
+ingress:
+  enabled: true
+  host: portable-service.example.com
+  tlsSecretName: portable-service-tls
+  # Overridden per cloud: alb / azure-application-gateway / gce.
+  className: ""
+  annotations: {}
+
+storage:
+  enabled: true
+  size: 1Gi
+  # Overridden per cloud: gp3 / managed-csi / standard-rwo.
+  className: ""

@@ -1,0 +1,21 @@
+# GCP overlay: `helm install portable-service helm/portable-service -f values.yaml -f values-gke.yaml`.
+# Touches only ingress, the ServiceAccount's Workload Identity annotation and
+# the storage class -- see values.yaml's header comment for why nothing else
+# belongs here.
+
+ingress:
+  className: gce
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+
+serviceAccount:
+  annotations:
+    # GKE Workload Identity: this Kubernetes ServiceAccount impersonates the
+    # Google service account below via the project's fixed workload identity
+    # pool, PROJECT_ID.svc.id.goog (see
+    # terraform/modules/identity-bindings/gcp.tf). No service-account key
+    # (JSON file) is ever created or mounted.
+    iam.gke.io/gcp-service-account: "portable-service@example-multi-cloud.iam.gserviceaccount.com"
+
+storage:
+  className: standard-rwo

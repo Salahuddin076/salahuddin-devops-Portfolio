@@ -1,0 +1,17 @@
+{{- if .Values.storage.enabled }}
+# A per-cloud StorageClass is the third and last thing this chart treats as
+# platform-specific -- gp3 on EKS, managed-csi on AKS, standard-rwo on GKE.
+# The claim itself, and how the deployment mounts it, are identical.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "portable-service.name" . }}-data
+  labels:
+    {{- include "portable-service.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.storage.className | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}
+{{- end }}

@@ -1,0 +1,72 @@
+# One ApplicationSet, one chart, three clusters. The list generator's three
+# entries are the "one deployment model" this project is named for: there is
+# no separate pipeline, chart or deploy script per cloud, only a different
+# values file and destination server per list entry. Register each real
+# cluster with `argocd cluster add` (or an addon-based registration) under
+# the matching name/server before this ApplicationSet can sync against it --
+# this file only has to be correct against three cluster *labels*, not three
+# live clusters.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: portable-service
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - cloud: eks
+            clusterName: eks-prod
+            clusterServer: https://eks-prod.example.com
+            valuesFile: values-eks.yaml
+          - cloud: aks
+            clusterName: aks-prod
+            clusterServer: https://aks-prod.example.com
+            valuesFile: values-aks.yaml
+          - cloud: gke
+            clusterName: gke-prod
+            clusterServer: https://gke-prod.example.com
+            valuesFile: values-gke.yaml
+  syncPolicy:
+    # Deleting the ApplicationSet (or one list entry) never deletes the
+    # workload it was managing on that cluster.
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: "portable-service-{{ .cloud }}"
+      labels:
+        app.kubernetes.io/part-of: multi-cloud-kubernetes
+        example.com/cloud: "{{ .cloud }}"
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-failed.slack: platform-alerts
+        notifications.argoproj.io/subscribe.on-health-degraded.slack: platform-alerts
+    spec:
+      project: portable-service
+      source:
+        repoURL: https://github.com/example-org/multi-cloud-kubernetes.git
+        targetRevision: main
+        path: helm/portable-service
+        helm:
+          releaseName: portable-service
+          valueFiles:
+            - "{{ .valuesFile }}"
+      destination:
+        name: "{{ .clusterName }}"
+        namespace: portable-service
+      revisionHistoryLimit: 10
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+          - FailOnSharedResource=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m

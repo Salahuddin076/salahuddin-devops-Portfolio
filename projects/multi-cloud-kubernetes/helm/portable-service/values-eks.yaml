@@ -1,0 +1,20 @@
+# AWS overlay: `helm install portable-service helm/portable-service -f values.yaml -f values-eks.yaml`.
+# Touches only ingress, the ServiceAccount's IRSA annotation and the storage
+# class -- see values.yaml's header comment for why nothing else belongs here.
+
+ingress:
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+
+serviceAccount:
+  annotations:
+    # IRSA: this pod's projected ServiceAccount token is exchanged for a
+    # session under this role via the EKS cluster's IAM OIDC provider (see
+    # terraform/modules/identity-bindings/aws.tf). No aws_iam_access_key, no
+    # static AWS credential, is ever created or mounted.
+    eks.amazonaws.com/role-arn: "arn:aws:iam::111111111111:role/portable-service-irsa"
+
+storage:
+  className: gp3
