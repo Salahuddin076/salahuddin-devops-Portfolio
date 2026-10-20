@@ -1,0 +1,19 @@
+---
+# Applies the same baseline role -- patch cadence, host hardening, log
+# shipping -- to both the AWS estate and the on-prem VMware estate. The
+# play is identical for both groups; only group_vars differ (package
+# manager, network interface naming). This is never run for real in this
+# repository: see README.md for the validation commands actually used
+# (--syntax-check / ansible-lint against the synthetic inventory below).
+
+- name: Apply the regulated-estate baseline to AWS hosts
+  hosts: aws_hosts
+  gather_facts: true
+  roles:
+    - baseline
+
+- name: Apply the regulated-estate baseline to on-prem hosts
+  hosts: onprem_hosts
+  gather_facts: true
+  roles:
+    - baseline

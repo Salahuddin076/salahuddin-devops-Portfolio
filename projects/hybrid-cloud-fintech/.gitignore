@@ -1,0 +1,21 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+plan.json
+crash.log
+# .terraform.lock.hcl is intentionally committed
+
+# Ansible
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+
+# Runtime outbox files from local_demo.py / manual experimentation
+outbox.json
+*.outbox.json

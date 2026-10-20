@@ -1,0 +1,15 @@
+{{ ansible_managed | default('Managed by Ansible: projects/hybrid-cloud-fintech/ansible roles/baseline') }}
+# Forwards host logs to the shared SIEM/SOC collector. Identical
+# destination for aws_hosts and onprem_hosts -- "consistent configuration
+# across cloud and on-prem" means the regulated estate's logs land in one
+# place regardless of which side of the hybrid link produced them.
+
+[output]
+destination = {{ baseline_log_shipping_endpoint }}
+port        = {{ baseline_log_shipping_port }}
+protocol    = {{ baseline_log_shipping_protocol }}
+
+[source]
+estate            = {{ baseline_estate }}
+network_interface = {{ baseline_network_interface }}
+include_paths     = /var/log/auth.log,/var/log/secure,/var/log/baseline-agent/*.log

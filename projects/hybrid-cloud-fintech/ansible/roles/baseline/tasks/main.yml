@@ -1,0 +1,147 @@
+---
+# The baseline role: the same patching cadence, hardening and log-shipping
+# policy applied to both aws_hosts and onprem_hosts, with only the
+# genuinely environment-specific bits (package manager, interface name)
+# pulled from group_vars rather than hardcoded here.
+
+- name: Assert this host belongs to a known estate
+  ansible.builtin.assert:
+    that:
+      - baseline_estate in ["aws", "onprem"]
+      - baseline_package_manager in ["dnf", "apt", "yum"]
+    fail_msg: >-
+      baseline_estate/baseline_package_manager must be set by
+      group_vars/aws_hosts.yml or group_vars/onprem_hosts.yml -- this role
+      refuses to guess at a patching policy for an unknown estate.
+
+# --- Patching cadence -----------------------------------------------------
+
+- name: Install unattended security patching (Debian/Ubuntu estate)
+  when: baseline_package_manager == "apt"
+  block:
+    - name: Install unattended-upgrades
+      ansible.builtin.apt:
+        name: unattended-upgrades
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Configure unattended-upgrades for security updates only
+      ansible.builtin.template:
+        src: 50unattended-upgrades.j2
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        owner: root
+        group: root
+        mode: "0644"
+      become: true
+      notify: restart unattended-upgrades
+
+- name: Install scheduled patching (RHEL/Amazon Linux estate)
+  when: baseline_package_manager in ["dnf", "yum"]
+  block:
+    - name: Install dnf-automatic
+      ansible.builtin.dnf:
+        name: dnf-automatic
+        state: present
+      become: true
+
+    - name: Configure dnf-automatic for the baseline cadence
+      ansible.builtin.template:
+        src: automatic.conf.j2
+        dest: /etc/dnf/automatic.conf
+        owner: root
+        group: root
+        mode: "0644"
+      become: true
+      notify: restart dnf-automatic timer
+
+- name: Record the patch cadence as a cron entry for audit visibility
+  ansible.builtin.cron:
+    name: "baseline patch window ({{ baseline_estate }})"
+    minute: "{{ baseline_patch_cron_schedule.split(' ')[0] }}"
+    hour: "{{ baseline_patch_cron_schedule.split(' ')[1] }}"
+    weekday: "{{ baseline_patch_cron_schedule.split(' ')[4] }}"
+    job: "/usr/bin/logger 'baseline-patch-window: scheduled patch window started'"
+    user: root
+  become: true
+
+# --- Host hardening ---------------------------------------------------------
+
+- name: Harden sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin"
+    line: "PermitRootLogin {{ baseline_ssh_permit_root_login }}"
+    validate: "sshd -t -f %s"
+  become: true
+  notify: restart sshd
+
+- name: Disable password authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication {{ baseline_ssh_password_authentication }}"
+    validate: "sshd -t -f %s"
+  become: true
+  notify: restart sshd
+
+- name: Install the access banner
+  ansible.builtin.copy:
+    content: "{{ baseline_login_banner }}"
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Reference the banner from sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?Banner"
+    line: "Banner /etc/issue.net"
+    validate: "sshd -t -f %s"
+  become: true
+  notify: restart sshd
+
+- name: Apply hardening sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ baseline_sysctl | dict2items }}"
+  become: true
+
+# --- Log shipping (consistent SIEM pipeline for both estates) -------------
+
+- name: Ensure the baseline log-shipping agent config directory exists
+  ansible.builtin.file:
+    path: /etc/baseline-agent
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Configure the log-shipping agent
+  ansible.builtin.template:
+    src: log-shipper.conf.j2
+    dest: /etc/baseline-agent/log-shipper.conf
+    owner: root
+    group: root
+    mode: "0640"
+  become: true
+  notify: restart baseline log shipper
+
+- name: Tag this host with its estate and the baseline role version (audit trail)
+  ansible.builtin.copy:
+    content: |
+      estate={{ baseline_estate }}
+      network_interface={{ baseline_network_interface }}
+      package_manager={{ baseline_package_manager }}
+      baseline_role_applied_from=hybrid-cloud-fintech
+    dest: /etc/baseline-agent/host-facts.txt
+    owner: root
+    group: root
+    mode: "0644"
+  become: true

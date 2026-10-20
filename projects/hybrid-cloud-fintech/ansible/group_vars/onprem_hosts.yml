@@ -1,0 +1,7 @@
+---
+# Genuinely different from AWS: these VMs run Ubuntu 22.04 on VMware
+# vSphere, so the package manager is apt, and the VMware vmxnet3 driver
+# names the primary interface ens192, not eth0.
+baseline_package_manager: apt
+baseline_network_interface: ens192
+baseline_estate: onprem

@@ -1,0 +1,16 @@
+---
+# Role-local defaults (overridable by group_vars/host_vars). Safe fallbacks
+# only -- the values that actually drive policy live in group_vars/all.yml
+# so they're visible in one place rather than buried in role defaults.
+baseline_package_manager: "{{ (ansible_facts.pkg_mgr | default('apt')) }}"
+baseline_network_interface: "{{ ansible_facts.default_ipv4.interface | default('eth0') }}"
+baseline_estate: "unknown"
+baseline_patch_cron_schedule: "30 3 * * 0"
+baseline_patch_security_only: true
+baseline_ssh_permit_root_login: "no"
+baseline_ssh_password_authentication: "no"
+baseline_login_banner: "Authorized access only."
+baseline_log_shipping_endpoint: "siem-collector.controls.internal.example"
+baseline_log_shipping_port: 6514
+baseline_log_shipping_protocol: "tcp-tls"
+baseline_sysctl: {}

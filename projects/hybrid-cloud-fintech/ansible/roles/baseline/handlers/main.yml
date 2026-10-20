@@ -1,0 +1,29 @@
+---
+- name: Restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+  become: true
+
+- name: Restart unattended-upgrades
+  ansible.builtin.service:
+    name: unattended-upgrades
+    state: restarted
+  become: true
+
+- name: Restart dnf-automatic timer
+  ansible.builtin.systemd:
+    name: dnf-automatic.timer
+    state: restarted
+    enabled: true
+  become: true
+
+- name: Restart baseline log shipper
+  ansible.builtin.service:
+    name: baseline-agent
+    state: restarted
+  become: true
+  # Reference role: the real log-shipping agent package is site-specific
+  # and not installed by this project, so "service not found" is expected
+  # here rather than a failure worth stopping the play over.
+  failed_when: false

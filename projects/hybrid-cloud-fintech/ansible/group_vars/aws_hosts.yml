@@ -1,0 +1,6 @@
+---
+# Genuinely different from on-prem: the AMI (Amazon Linux 2023) uses dnf,
+# and the primary ENI is always eth0.
+baseline_package_manager: dnf
+baseline_network_interface: eth0
+baseline_estate: aws

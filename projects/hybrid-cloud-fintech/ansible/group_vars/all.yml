@@ -1,0 +1,24 @@
+---
+# Policy that is identical whether the host is an AWS EKS node or an
+# on-prem VMware VM: "consistent configuration across cloud and on-prem"
+# means these values are set here once, not duplicated per group.
+
+baseline_patch_cron_schedule: "30 3 * * 0"   # weekly, Sunday 03:30 local
+baseline_patch_security_only: true
+
+baseline_ssh_permit_root_login: "no"
+baseline_ssh_password_authentication: "no"
+baseline_login_banner: |
+  This system is part of the regulated payments estate. Access is logged
+  and restricted to authorized personnel. Unauthorized access is prohibited.
+
+baseline_log_shipping_endpoint: "siem-collector.controls.internal.example"
+baseline_log_shipping_port: 6514
+baseline_log_shipping_protocol: "tcp-tls"
+
+baseline_sysctl:
+  net.ipv4.ip_forward: 0
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.tcp_syncookies: 1

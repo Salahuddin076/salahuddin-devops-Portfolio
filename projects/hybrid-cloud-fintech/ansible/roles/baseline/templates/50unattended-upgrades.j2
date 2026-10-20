@@ -1,0 +1,11 @@
+// {{ ansible_managed | default('Managed by Ansible: projects/hybrid-cloud-fintech/ansible roles/baseline') }}
+Unattended-Upgrade::Allowed-Origins {
+{% if baseline_patch_security_only %}
+    "${distro_id}:${distro_codename}-security";
+{% else %}
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}:${distro_codename}-updates";
+{% endif %}
+};
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";

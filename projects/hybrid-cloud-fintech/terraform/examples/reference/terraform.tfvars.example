@@ -1,0 +1,26 @@
+# Copy to terraform.tfvars and edit -- never commit the copy with real values.
+# Every value below is already documentation-safe (TEST-NET / RFC 5737 and
+# RFC 1918 ranges); a real deployment replaces the on_prem_gateways IPs with
+# the actual public IPs of the on-prem edge devices.
+
+region      = "us-east-1"
+name_prefix = "hcf-ref"
+
+vpc_cidr_block              = "10.42.0.0/16"
+edge_subnet_cidr_block      = "10.42.0.0/24"
+regulated_subnet_cidr_block = "10.42.1.0/24"
+
+on_prem_gateways = [
+  {
+    name               = "onprem-dc1-fw"
+    bgp_asn            = 65000
+    ip_address         = "203.0.113.10"
+    on_prem_cidr_block = "198.51.100.0/24"
+  },
+  {
+    name               = "onprem-dc2-fw"
+    bgp_asn            = 65000
+    ip_address         = "203.0.113.11"
+    on_prem_cidr_block = "198.51.100.0/24"
+  },
+]
