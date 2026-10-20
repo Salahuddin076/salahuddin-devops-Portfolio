@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "keyvault-csi-demo.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "keyvault-csi-demo.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "keyvault-csi-demo.selectorLabels" . | nindent 6 }}

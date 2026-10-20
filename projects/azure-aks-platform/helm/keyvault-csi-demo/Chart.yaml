@@ -1,0 +1,10 @@
+apiVersion: v2
+name: keyvault-csi-demo
+description: >-
+  Demonstrates mounting Azure Key Vault secrets into a pod via the Secrets
+  Store CSI driver's SecretProviderClass, authenticated with Microsoft Entra
+  Workload ID (no client secret, no Key Vault access policy on the pod's
+  identity -- Azure RBAC only). Reference/demo chart, not a production app.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

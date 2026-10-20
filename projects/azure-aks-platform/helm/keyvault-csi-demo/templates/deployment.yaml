@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keyvault-csi-demo.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "keyvault-csi-demo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "keyvault-csi-demo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "keyvault-csi-demo.labels" . | nindent 8 }}
+        # Required by the Azure Key Vault Provider for Secrets Store CSI
+        # Driver's mutating webhook to inject the workload identity
+        # projected-token volume/env vars into this pod.
+        azure.workload.identity/use: "true"
+      annotations:
+        # Rolls the pods when the secret *mapping* changes (mount-time config).
+        # A rotated secret *value* doesn't: the driver's secret_rotation_enabled
+        # rewrites the files in place and the app re-reads them.
+        checksum/secretproviderclass: {{ include "keyvault-csi-demo.spcSpec" . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "keyvault-csi-demo.serviceAccountName" . }}
+      automountServiceAccountToken: true
+      enableServiceLinks: false
+      securityContext:
+        {{- include "keyvault-csi-demo.podSecurityContext" . | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "keyvault-csi-demo.selectorLabels" . | nindent 14 }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: payments-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          # Configuration only: where the files are and which ones must
+          # exist. No secret value is ever passed as an env var.
+          env:
+            - name: SECRETS_DIR
+              value: {{ .Values.secrets.mountPath | quote }}
+            - name: SECRETS_REQUIRED
+              value: {{ include "keyvault-csi-demo.requiredFiles" . | quote }}
+            - name: PORT
+              value: {{ .Values.containerPort | quote }}
+          volumeMounts:
+            - name: secrets-store
+              mountPath: {{ .Values.secrets.mountPath }}
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- include "keyvault-csi-demo.containerSecurityContext" . | nindent 12 }}
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "keyvault-csi-demo.fullname" . }}
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi

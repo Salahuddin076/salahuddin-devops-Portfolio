@@ -1,0 +1,64 @@
+# keyvault-csi-demo: zero hard-coded secrets. Every value below is a secret
+# *name*/path/identity reference, never a secret value.
+
+image:
+  repository: example-aks-platformacr.azurecr.io/payments-api
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+namespace: payments
+
+# Must match terraform/examples/reference/main.tf's workload_identity module
+# ("payments-api" key -> namespace "payments", service_account_name
+# "payments-api") and the federated credential's subject exactly, or Entra
+# ID rejects the token exchange with an opaque AADSTS70021 error that
+# `terraform validate`/`helm template` cannot catch.
+serviceAccount:
+  create: true
+  name: payments-api
+  # Set from module.workload_identity.client_ids["payments-api"] after apply.
+  # Synthetic placeholder here -- never a real client ID.
+  azureClientId: "00000000-0000-0000-0000-000000000000"
+
+keyVault:
+  # Set from module.platform.key_vault_uri after apply.
+  vaultUrl: "https://example-aks-platform-kv.vault.azure.net/"
+  tenantId: "11111111-1111-1111-1111-111111111111"
+  objects:
+    - objectName: payments-db-connection-string
+      objectType: secret
+      objectAlias: db-connection-string
+    - objectName: payments-api-signing-key
+      objectType: secret
+      objectAlias: api-signing-key
+
+secrets:
+  mountPath: /mnt/secrets-store
+
+containerPort: 8080
+
+service:
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+probes:
+  startup:
+    periodSeconds: 2
+    failureThreshold: 30
+  readiness:
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 10
+    failureThreshold: 3
+
+podDisruptionBudget:
+  minAvailable: 1

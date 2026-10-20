@@ -1,0 +1,7 @@
+{{ include "keyvault-csi-demo.fullname" . }} deployed to namespace {{ .Values.namespace }}.
+
+Secrets are mounted from Azure Key Vault at {{ .Values.secrets.mountPath }}
+via the Secrets Store CSI driver, authenticated with Microsoft Entra
+Workload ID (ServiceAccount {{ include "keyvault-csi-demo.serviceAccountName" . }},
+client ID {{ .Values.serviceAccount.azureClientId }}). No secret value is
+stored in this chart, in a Kubernetes Secret, or in a container image.
