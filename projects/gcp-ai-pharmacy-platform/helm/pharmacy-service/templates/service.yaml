@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pharmacy-service.name" . }}
+  labels:
+    {{- include "pharmacy-service.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "pharmacy-service.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

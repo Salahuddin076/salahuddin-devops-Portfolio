@@ -1,0 +1,15 @@
+apiVersion: v2
+name: pharmacy-service
+description: Synthetic Java-based pharmacy service, deployed either as the "api" workload (Java REST services) or the "ai" workload (inference workers), each scheduled onto its own GKE node pool via Workload Identity and node affinity.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+kubeVersion: ">=1.30.0-0"
+keywords:
+  - gke
+  - workload-identity
+  - private-cluster
+  - ai-inference
+maintainers:
+  - name: platform-team
+    email: platform-team@example.com

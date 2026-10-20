@@ -1,0 +1,74 @@
+# pharmacy-service: deployed twice (api, ai) with two separate `helm install`
+# releases / values overlays, one per workload. The chart's job is to put
+# each release's pods on the matching GKE node pool and to wire its
+# ServiceAccount to the matching Google service account via Workload
+# Identity -- it never reads a Google credential file or env var itself.
+
+# "api" or "ai". Drives the nodeSelector/toleration pair, the GSA used for
+# Workload Identity, and which secrets are mounted.
+workload: api
+
+image:
+  # Synthetic registry path; matches terraform/modules/delivery's
+  # Artifact Registry repository.
+  repository: us-central1-docker.pkg.dev/example-pharmacy-platform/pharmacy-images/pharmacy-api
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+serviceAccount:
+  create: true
+  name: pharmacy-api
+  # Must match a key in terraform's workload_identity_bindings and the
+  # matching google_service_account's email (module.pharmacy_api/pharmacy_ai
+  # in terraform/examples/reference/main.tf). GKE's Workload Identity
+  # webhook reads this annotation; without it, the pod would fall back to
+  # the node's default identity and lose least-privilege scoping.
+  gcpServiceAccountEmail: pharmacy-api@example-pharmacy-platform.iam.gserviceaccount.com
+
+# Scheduling onto the matching node pool. The "ai" pool carries a
+# workload=ai-inference:NoSchedule taint (see terraform/modules/gke-cluster),
+# so only pods with the matching toleration ever land there -- that's what
+# actually isolates inference spikes from the API pool, not just a
+# preference.
+nodeSelector:
+  workload-pool: api
+
+tolerations: []
+
+containerPort: 8080
+
+service:
+  port: 80
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+
+probes:
+  readiness:
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    periodSeconds: 10
+    failureThreshold: 3
+
+podDisruptionBudget:
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress
+
+secrets:
+  # Secret Manager secret name (not value) this workload's pods read, via the
+  # Secret Manager CSI driver's SecretProviderClass-equivalent volume mount.
+  # Kept as a reference value only -- no CSI manifests are rendered by this
+  # chart; see docs/architecture.md for how the app resolves it through the
+  # Secret Manager client library using its Workload Identity credentials
+  # instead.
+  name: db-credentials

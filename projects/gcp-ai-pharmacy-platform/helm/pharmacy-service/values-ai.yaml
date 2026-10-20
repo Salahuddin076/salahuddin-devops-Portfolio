@@ -1,0 +1,40 @@
+# Overlay for the AI inference release: `helm install pharmacy-ai
+# helm/pharmacy-service -f values.yaml -f values-ai.yaml`. Everything not
+# overridden here (probes, PDB, NetworkPolicy shape) is shared with the API
+# release's values.yaml.
+workload: ai
+
+image:
+  repository: us-central1-docker.pkg.dev/example-pharmacy-platform/pharmacy-images/pharmacy-ai
+  tag: "1.0.0"
+
+replicaCount: 1
+
+serviceAccount:
+  name: pharmacy-ai
+  gcpServiceAccountEmail: pharmacy-ai@example-pharmacy-platform.iam.gserviceaccount.com
+
+nodeSelector:
+  workload-pool: ai-inference
+
+# Required to land on the AI pool, which carries this taint
+# (see terraform/modules/gke-cluster/main.tf node_pools.ai.taint). Without
+# this toleration the scheduler would never place these pods there, which is
+# exactly what stops an API pod from ever landing on AI capacity by mistake.
+tolerations:
+  - key: workload
+    operator: Equal
+    value: ai-inference
+    effect: NoSchedule
+
+containerPort: 8081
+
+resources:
+  requests:
+    cpu: "2"
+    memory: 8Gi
+  limits:
+    memory: 16Gi
+
+secrets:
+  name: ai-model-api-key

@@ -1,0 +1,8 @@
+{{ include "pharmacy-service.name" . }} deployed as the "{{ .Values.workload }}" workload.
+
+Check the ServiceAccount is bound correctly:
+  kubectl get sa {{ .Values.serviceAccount.name }} -n {{ .Release.Namespace }} -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
+
+That must match a google_service_account_iam_member binding in
+terraform/modules/gke-cluster, or Workload Identity impersonation will fail
+with a 403 from the metadata server.

@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars and fill in a real (non-production, dedicated)
+# project if you ever actually apply this. Never commit terraform.tfvars.
+project_id  = "example-pharmacy-platform"
+region      = "us-central1"
+environment = "reference"
