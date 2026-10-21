@@ -1,33 +1,47 @@
 # Muhammad Salahuddin — DevOps & Cloud Architecture Portfolio
 
-**Senior DevOps Engineer · 9+ years · AWS · Azure · GCP · Kubernetes · Terraform · DevSecOps**
+**Senior DevOps Engineer | Platform Engineer | AWS, Kubernetes & DevSecOps**
+Pakistan (Open to Remote) · 8+ years
 
-[![Portfolio site](https://img.shields.io/badge/portfolio-salahuddin.wesaveall.com-0b84ff)](https://salahuddin.wesaveall.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-muhammad--salahuddin-0a66c2)](https://linkedin.com/in/muhammad-salahuddin) [![Email](https://img.shields.io/badge/email-salahuddin76%40hotmail.com-informational)](mailto:salahuddin76@hotmail.com) [![Tests](https://img.shields.io/badge/tests-1%2C540%20passing-success)]()
+[![Portfolio site](https://img.shields.io/badge/portfolio-salahuddin.wesaveall.com-0b84ff)](https://salahuddin.wesaveall.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-muhammad--salahuddin-0a66c2)](https://linkedin.com/in/muhammad-salahuddin-a96369137) [![Email](https://img.shields.io/badge/email-salahuddin76%40hotmail.com-informational)](mailto:salahuddin76@hotmail.com) [![Tests](https://img.shields.io/badge/tests-1%2C540%20passing-success)]()
 
-20 working, independently-verified infrastructure projects that back the case studies on my [portfolio site](https://salahuddin.wesaveall.com/projects) and the experience on my [résumé](https://salahuddin.wesaveall.com/resume.pdf) — not slideware. Every project ships with real Terraform/Helm, a test suite, and a README that states plainly what's been validated and what hasn't.
+20 working, independently-verified infrastructure projects that back the case studies on my [portfolio site](https://salahuddin.wesaveall.com/projects) and the experience on my résumé — not slideware. Every project ships with real Terraform/Helm, a test suite, and a README that states plainly what's been validated and what hasn't.
 
-> Senior DevOps Engineer with 9+ years designing, securing and operating cloud-native infrastructure across AWS, Azure and GCP for fintech, SaaS, e-commerce and AI-driven platforms — Kubernetes (EKS/AKS/GKE), Terraform-driven IaC, CI/CD with Jenkins/GitHub Actions/CodePipeline/ArgoCD, and DevSecOps aligned with PCI-DSS, SOC2 and HIPAA.
+> Senior DevOps & Platform Engineer with 8+ years of experience architecting, automating, securing, and managing highly available, scalable, and cost-optimized infrastructure across AWS, Azure, and GCP for fintech, SaaS, e-commerce, healthcare, and AI-driven platforms. Specialized in Kubernetes (EKS, AKS, GKE), Terraform, Docker, GitOps, and CI/CD automation using Jenkins, GitHub Actions, and ArgoCD. Proven expertise in multi-region architecture, disaster recovery, infrastructure as code, DevSecOps, and production reliability — integrating security scanning, vulnerability management, SIEM, and secrets management into pipelines supporting PCI-DSS, SOC 2, HIPAA, and ISO 27001.
 
 ## Why this repo
 
 Most portfolios are diagrams and prose. This one is runnable: 20 self-contained projects spanning AWS, GCP, Azure, Kubernetes, GitOps, security, FinOps, disaster recovery and AIOps, each with its own Terraform, Helm charts and tests. Every project runs and validates **locally, with no cloud account** — Terraform is validated only, never applied, and every example uses synthetic data (`example.com`, placeholder account IDs, illustrative prices) so it's safe to read, run and reuse.
+
+Several of these are direct reference implementations of production patterns from my CV — ARM64/Graviton migration, multi-region DR with automated failover, self-hosted n8n with KEDA scale-to-zero, AI-based log anomaly detection, and zero-hard-coded-secrets EKS via the Secrets Store CSI driver — rebuilt here from scratch on synthetic data so they can be read and run without exposing any client's names, accounts or figures.
 
 **1,540 unit tests · all passing · stdlib Python, zero dependencies.**
 
 | | |
 |---|---|
 | **Projects** | 20, each independently buildable and testable |
-| **Clouds** | AWS, Azure, GCP, plus hybrid on-prem (VMware) |
+| **Clouds** | AWS, Azure, GCP, plus hybrid on-prem (VMware vSphere/ESXi) |
 | **Test coverage** | 1,540 tests, stdlib-only, no mocking frameworks |
 | **IaC validated** | Every `terraform validate` and `helm lint`/`kubeconform -strict` passes |
 | **CI** | Every GitHub Actions workflow passes a self-written hardening linter (SHA-pinned actions, least-privilege tokens, no persisted credentials) |
 
+## Core skills
+
+- **AWS:** EC2, EKS, ECS, Fargate, Lambda, S3, RDS/Aurora, DynamoDB, VPC, Transit Gateway, CloudFront, Route 53, SQS, SNS, SES, API Gateway, ECR, ElastiCache, SageMaker, Amazon Bedrock, CodePipeline/CodeBuild/CodeDeploy
+- **GCP & Azure:** GKE, Compute Engine, Cloud Build, Cloud Run, Cloud SQL, Pub/Sub; AKS, VMs, App Service, Azure DevOps, Azure AD, Blob Storage, Key Vault
+- **Containers & orchestration:** Docker, Kubernetes (EKS/AKS/GKE), Helm, KEDA, Cluster Autoscaler
+- **IaC & CI/CD:** Terraform, AWS CloudFormation, Ansible, GitHub Actions, Jenkins, GitLab CI, AWS CodePipeline, ArgoCD (GitOps)
+- **HA & DR:** Multi-region architecture, automated failover, cross-region replication, backup and restore, RPO/RTO planning
+- **DevSecOps & compliance:** SIEM, penetration testing, vulnerability management, SonarQube, Snyk, OWASP ZAP, IAM least privilege, Secrets Manager / Secrets Store CSI Driver, credential rotation, Security Hub, Inspector, CloudTrail — PCI-DSS, SOC 2, HIPAA, ISO 27001
+- **Observability:** Prometheus, Grafana, CloudWatch, ELK Stack, Datadog, Nagios, Zabbix, SLO/SLI frameworks
+- **Automation & AI:** Python (boto3), Bash, Java, Node.js, PHP, n8n, LLM-assisted operations, AI-based log anomaly detection
+
 ## Contact
 
 - Portfolio: [salahuddin.wesaveall.com](https://salahuddin.wesaveall.com)
-- Résumé: [salahuddin.wesaveall.com/resume.pdf](https://salahuddin.wesaveall.com/resume.pdf)
-- LinkedIn: [linkedin.com/in/muhammad-salahuddin](https://linkedin.com/in/muhammad-salahuddin)
+- LinkedIn: [linkedin.com/in/muhammad-salahuddin-a96369137](https://linkedin.com/in/muhammad-salahuddin-a96369137)
 - Email: [salahuddin76@hotmail.com](mailto:salahuddin76@hotmail.com)
+- Phone: +92 333 6074999
 - GitHub: [github.com/Salahuddin076](https://github.com/Salahuddin076)
 
 ## How each project is labeled
