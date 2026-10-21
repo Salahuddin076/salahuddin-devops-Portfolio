@@ -1,11 +1,34 @@
-# DevOps & Cloud Architecture Portfolio
+# Muhammad Salahuddin — DevOps & Cloud Architecture Portfolio
 
-Working, tested infrastructure code behind the projects on
-[salahuddin.wesaveall.com/projects](https://salahuddin.wesaveall.com/projects) — by **Muhammad Salahuddin**, Senior DevOps Engineer.
+**Senior DevOps Engineer · 9+ years · AWS · Azure · GCP · Kubernetes · Terraform · DevSecOps**
 
-20 self-contained projects spanning AWS, GCP, Azure, Kubernetes, GitOps, security, FinOps, DR and AIOps. Every project runs and validates **locally, with no cloud account** — Terraform is validated only, never applied, and every example uses synthetic data (`example.com`, placeholder account IDs, illustrative prices).
+[![Portfolio site](https://img.shields.io/badge/portfolio-salahuddin.wesaveall.com-0b84ff)](https://salahuddin.wesaveall.com) [![LinkedIn](https://img.shields.io/badge/LinkedIn-muhammad--salahuddin-0a66c2)](https://linkedin.com/in/muhammad-salahuddin) [![Email](https://img.shields.io/badge/email-salahuddin76%40hotmail.com-informational)](mailto:salahuddin76@hotmail.com) [![Tests](https://img.shields.io/badge/tests-1%2C540%20passing-success)]()
+
+20 working, independently-verified infrastructure projects that back the case studies on my [portfolio site](https://salahuddin.wesaveall.com/projects) and the experience on my [résumé](https://salahuddin.wesaveall.com/resume.pdf) — not slideware. Every project ships with real Terraform/Helm, a test suite, and a README that states plainly what's been validated and what hasn't.
+
+> Senior DevOps Engineer with 9+ years designing, securing and operating cloud-native infrastructure across AWS, Azure and GCP for fintech, SaaS, e-commerce and AI-driven platforms — Kubernetes (EKS/AKS/GKE), Terraform-driven IaC, CI/CD with Jenkins/GitHub Actions/CodePipeline/ArgoCD, and DevSecOps aligned with PCI-DSS, SOC2 and HIPAA.
+
+## Why this repo
+
+Most portfolios are diagrams and prose. This one is runnable: 20 self-contained projects spanning AWS, GCP, Azure, Kubernetes, GitOps, security, FinOps, disaster recovery and AIOps, each with its own Terraform, Helm charts and tests. Every project runs and validates **locally, with no cloud account** — Terraform is validated only, never applied, and every example uses synthetic data (`example.com`, placeholder account IDs, illustrative prices) so it's safe to read, run and reuse.
 
 **1,540 unit tests · all passing · stdlib Python, zero dependencies.**
+
+| | |
+|---|---|
+| **Projects** | 20, each independently buildable and testable |
+| **Clouds** | AWS, Azure, GCP, plus hybrid on-prem (VMware) |
+| **Test coverage** | 1,540 tests, stdlib-only, no mocking frameworks |
+| **IaC validated** | Every `terraform validate` and `helm lint`/`kubeconform -strict` passes |
+| **CI** | Every GitHub Actions workflow passes a self-written hardening linter (SHA-pinned actions, least-privilege tokens, no persisted credentials) |
+
+## Contact
+
+- Portfolio: [salahuddin.wesaveall.com](https://salahuddin.wesaveall.com)
+- Résumé: [salahuddin.wesaveall.com/resume.pdf](https://salahuddin.wesaveall.com/resume.pdf)
+- LinkedIn: [linkedin.com/in/muhammad-salahuddin](https://linkedin.com/in/muhammad-salahuddin)
+- Email: [salahuddin76@hotmail.com](mailto:salahuddin76@hotmail.com)
+- GitHub: [github.com/Salahuddin076](https://github.com/Salahuddin076)
 
 ## How each project is labeled
 
