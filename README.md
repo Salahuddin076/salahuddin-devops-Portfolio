@@ -180,3 +180,7 @@ Each project's own `README.md` has the exact demo commands, architecture notes a
 ## Status
 
 All 20 projects are implemented, tested and independently re-verified — see [docs/implementation-status.md](docs/implementation-status.md) for the full verification matrix (test counts, validation evidence, and when each was last re-checked). Nothing in this repo has ever been deployed to a live cloud account.
+
+## License
+
+This repository is public for portfolio and recruiting purposes — you're welcome to clone it and run the tests. All rights are otherwise reserved; see [LICENSE](LICENSE) before reusing or redistributing any of the code.

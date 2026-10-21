@@ -1,0 +1,27 @@
+Copyright (c) 2026 Muhammad Salahuddin
+
+All rights reserved.
+
+This repository and its contents (including, but not limited to, source
+code, Terraform/Helm/Kubernetes configuration, documentation and tests)
+are made publicly viewable for portfolio, recruiting and educational
+reference purposes only.
+
+You may:
+- View, clone, and read this repository to evaluate the author's work.
+- Run the included tests and validation commands locally for your own
+  learning.
+
+You may not, without the author's prior written permission:
+- Reuse, copy, modify, or redistribute this code, in whole or in part, in
+  any other project (commercial or non-commercial).
+- Present this work, or a derivative of it, as your own in an application,
+  portfolio, or submission.
+- Use any part of this repository for training, fine-tuning, or evaluating
+  machine learning or AI models.
+
+No license, express or implied, to any other use is granted. All names,
+account identifiers, domains, and figures in this repository are synthetic
+and do not represent any real system, client, or organization.
+
+For permission requests, contact salahuddin76@hotmail.com.
