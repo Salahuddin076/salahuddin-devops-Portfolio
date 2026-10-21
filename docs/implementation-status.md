@@ -25,7 +25,7 @@ A project is ✅ only when its code, docs and tests pass locally **and** I have 
 | 19 | ecs-fargate-blue-green | Portfolio implementation | ✅ | 105 ✅ | 6 dirs validate · arm64 image built and run | **Implemented** |
 | 20 | eks-secrets-store-csi | Portfolio implementation | ✅ | 74 ✅ | 2 dirs validate · kubeconform strict incl. CRD schema | **Implemented** |
 
-**20 implemented, 0 design — all projects implemented.** In total: 1,474 tests. A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03, 15, 07, 08, 09 and 12 were each verified individually on 2026-10-19/20. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS/Azure/GCP/VMware. A full regression run across all 20 projects has not been re-run end to end since the last additions — only each new project individually.
+**20 implemented, 0 design — all projects implemented.** In total: 1,540 tests (per-project counts above). A full regression run across all 20 projects on 2026-10-21 confirmed every suite still passes and corrected the previously-stated total (1,474, stale since before 09's 51 tests were added in). A full regression run on 2026-10-14 passed after one test fix (`8cd0fa2`); 02, 11 and 05 were each verified individually on 2026-10-15; 03, 15, 07, 08, 09 and 12 were each verified individually on 2026-10-19/20. Nothing has been deployed to a cloud account; every project's README lists what remains unverified against real AWS/Azure/GCP/VMware.
 
 Projects 16–20 were added in session 3. At the owner's request they are all labeled portfolio implementations, and they are numbered in the order they were completed.
 

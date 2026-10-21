@@ -1,5 +1,17 @@
 # Session handoff
 
+## Session 5 — 2026-10-21
+
+### Completed
+- **README overhaul** (`1812138`, `a85b66c`, `595ba56`, `b4ca5d4`): rewrote the repo README from a stale 14-project table (1,251 tests) to all 20 projects with a full regression-verified test count, added a 2-3 line description per project, and added a recruiter-facing header (title, contact links, professional summary, core-skills list) sourced from the owner's current CV.
+- **CV sync**: the owner supplied an updated CV showing 8+ years (was 9+ on the website and in the README header). Updated `salahuddin-profile-website`'s `resume.ts`, `layout.tsx` and `Skills.tsx` to 8+ (commit `7a11152` on `portfolio/phase-1-projects`, **not pushed/merged** — same merge-to-main restriction as before). The README here now matches the CV exactly (title, LinkedIn URL with full `-a96369137` suffix, summary, skills).
+- **Full regression run**: re-ran every project's test suite individually (not trusted from docs) — all 20 pass, 1,540 tests total. The previously-recorded total of 1,474 in `implementation-status.md` was stale (predated project 09's 51 tests); corrected.
+- **License added** (`56666c2`): the owner asked whether a public GitHub repo can be made "view-only, no clone/fork" — confirmed that's not possible (GitHub's `allow_forking` setting can only be changed on org-owned *private* repos; public repos are always cloneable/forkable by design, confirmed via a failed `gh api` PATCH attempt). Added an all-rights-reserved `LICENSE` instead: viewing/cloning/running tests is explicitly permitted, reuse/redistribution/AI-training use is not without permission.
+- **gh CLI account**: this machine has 3 `gh` accounts logged in; switched the active one to `Salahuddin076` (the account that owns every repo in this workspace) and documented the switch in `.claude/skills/personal-profile/SKILL.md` so future sessions check/switch before any `gh api`/`gh repo`/`gh pr` call. Plain `git push`/`pull` were already unaffected (SSH alias `github-salahuddin`).
+
+### Next
+Decide whether to push/merge the website's `portfolio/phase-1-projects` branch (8+ years fix) to `main` — not done yet per the standing "never merge without explicit ask" rule. `public/resume.pdf` still has no source file in the repo to regenerate from; confirm what figure it currently shows and whether it needs manual updating to match 8+.
+
 ## Session 4 — 2026-10-19
 
 ### Completed
